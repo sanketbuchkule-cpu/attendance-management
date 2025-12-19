@@ -434,6 +434,9 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <span class="navbar-brand">Leave & NSA Tracker</span>
+    <div class="ms-auto">
+        <button class="btn btn-outline-danger btn-sm" onclick="logout()">Logout</button>
+    </div>
   </div>
 </nav>
 
@@ -809,34 +812,66 @@
   XLSX.writeFile(wb, 'Sample_Employees.xlsx');
 });
 
-// --- LOGIN LOGIC ---
+// --- AUTHENTICATION & INITIALIZATION ---
+
+// 1. Monitor Auth State (Central Controller)
+firebase.auth().onAuthStateChanged((user) => {
+    const loginOverlay = document.getElementById('loginOverlay');
+    
+    if (user) {
+        // User is logged in
+        if(loginOverlay) loginOverlay.style.display = 'none';
+        
+        // START DATA LOADING ONLY NOW
+        loadDashboardData();
+    } else {
+        // User is logged out
+        if(loginOverlay) loginOverlay.style.display = 'flex';
+        
+        // Optional: Clear any visible data lists if necessary
+        const list = document.getElementById('employeeList');
+        if(list) list.innerHTML = '';
+    }
+});
+
+// 2. Function to load data only after login success
+async function loadDashboardData() {
+    try {
+        console.log("Securely fetching data...");
+        // Call your existing data functions here
+        await getEmployeesFromDB(); 
+        // add any other initial fetch calls here
+    } catch (error) {
+        console.error("Data load failed:", error);
+    }
+}
+
+// 3. Login Function
 function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginError');
 
     firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(() => {
-            // Login successful
-            document.getElementById('loginOverlay').style.display = 'none';
-        })
         .catch((error) => {
-            errorEl.textContent = "Invalid Login Details";
-            errorEl.style.display = 'block';
+            console.error("Login Error:", error.message);
+            if(errorEl) {
+                errorEl.textContent = "Incorrect email or password.";
+                errorEl.style.display = 'block';
+            }
         });
 }
 
-// Check if user is already logged in when page loads
-firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-        document.getElementById('loginOverlay').style.display = 'none';
-    } else {
-        document.getElementById('loginOverlay').style.display = 'flex';
-    }
-});
-
+// 4. Logout Function
 function logout() {
-    firebase.auth().signOut();
+    if(confirm("Are you sure you want to logout?")) {
+        firebase.auth().signOut().then(() => {
+            console.log("Logged out successfully");
+            // Overlay will automatically show due to onAuthStateChanged
+        }).catch((error) => {
+            alert("Error logging out: " + error.message);
+        });
+    }
 }
 /*********************
  * CONSTANTS
