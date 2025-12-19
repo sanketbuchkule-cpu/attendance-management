@@ -814,62 +814,62 @@
 
 // --- AUTHENTICATION & INITIALIZATION ---
 
-// 1. Monitor Auth State (Central Controller)
+// --- AUTHENTICATION & AUTO-LOAD LOGIC ---
+
 firebase.auth().onAuthStateChanged((user) => {
     const loginOverlay = document.getElementById('loginOverlay');
     
     if (user) {
-        // User is logged in
+        // 1. Success! Hide login screen
         if(loginOverlay) loginOverlay.style.display = 'none';
         
-        // START DATA LOADING ONLY NOW
-        loadDashboardData();
+        // 2. Load data automatically now that we are authenticated
+        // This prevents the "Error loading" alert and avoids manual refresh
+        initializeSystemData();
     } else {
-        // User is logged out
+        // User is logged out, show login screen
         if(loginOverlay) loginOverlay.style.display = 'flex';
-        
-        // Optional: Clear any visible data lists if necessary
-        const list = document.getElementById('employeeList');
-        if(list) list.innerHTML = '';
     }
 });
 
-// 2. Function to load data only after login success
-async function loadDashboardData() {
+// New helper to wrap your initial DB calls
+async function initializeSystemData() {
     try {
-        console.log("Securely fetching data...");
-        // Call your existing data functions here
+        console.log("Authenticated. Loading data...");
+        // Call your main data fetchers here
         await getEmployeesFromDB(); 
-        // add any other initial fetch calls here
+        
+        // If you have a main dashboard table that needs to refresh:
+        // if (typeof renderEmployeeTable === "function") renderEmployeeTable();
+        
     } catch (error) {
-        console.error("Data load failed:", error);
+        console.error("Delayed load error:", error);
     }
 }
 
-// 3. Login Function
+// Updated Login Function
 function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginError');
 
+    // Sign in—the onAuthStateChanged above will handle the rest automatically
     firebase.auth().signInWithEmailAndPassword(email, pass)
         .catch((error) => {
-            console.error("Login Error:", error.message);
+            console.error("Login failed:", error.message);
             if(errorEl) {
-                errorEl.textContent = "Incorrect email or password.";
+                errorEl.textContent = "Invalid email or password.";
                 errorEl.style.display = 'block';
             }
         });
 }
 
-// 4. Logout Function
+// Logout Function
 function logout() {
     if(confirm("Are you sure you want to logout?")) {
         firebase.auth().signOut().then(() => {
-            console.log("Logged out successfully");
-            // Overlay will automatically show due to onAuthStateChanged
-        }).catch((error) => {
-            alert("Error logging out: " + error.message);
+            // Page will automatically show login screen via onAuthStateChanged
+            console.log("Logged out.");
         });
     }
 }
