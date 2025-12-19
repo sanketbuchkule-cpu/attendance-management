@@ -2371,41 +2371,47 @@ function hideDeptSummary() {
  *********************/
 async function getMonthlyReportData(emp, month) {
     const [year, m] = month.split('-').map(Number);
-    const allWorkingDaysInMonth = await getWorkingDays(year, m); 
-    const nsaRules = await getNsaRulesFromDB();
+    
+    // 1. Fetch dependencies in parallel to save time
+    const [allWorkingDaysInMonth, nsaRules, records] = await Promise.all([
+        getWorkingDays(year, m),
+        getNsaRulesFromDB(),
+        getAttendanceFromDB(emp.id, month)
+    ]);
 
-    // ENHANCEMENT 1: Determine valid working days for this employee
+    // Determine valid working days for this employee
     const validWorkingDays = allWorkingDaysInMonth.filter(date => date >= emp.joinDate);
     
-    // Fetch records for the month
-    const records = await getAttendanceFromDB(emp.id, month);
-
     let leaves = { PL:0, CL:0, SL:0, FL:0 };
     let finalPresentDays = 0;
     let totalNsaAmount = 0;
     let shiftBreakdown = { MORNING_8_5: 0, NIGHT_6_3: 0, NIGHT_9_30_6_30: 0 }; 
 
-    // Helper to find a record by date
-    const getRecordByDate = (date) => {
-        const recordKey = `${emp.id}_${date}`;
-        return records.find(r => r.docId === recordKey);
-    }
+    // 2. Optimization: Convert records array to an Object for instant lookup
+    const recordMap = {};
+    records.forEach(r => {
+        recordMap[r.docId] = r;
+    });
 
-    // 1. Calculate leaves & present days with shift breakdown
+    // 3. Process all days. 
+    // We use a regular loop but removed 'await' from inside to make it instant.
     for (const date of validWorkingDays) {
-        const record = getRecordByDate(date);
+        const recordKey = `${emp.id}_${date}`;
+        const record = recordMap[recordKey];
         
         if (record && record.status === 'LEAVE' && record.leaveType) {
-            leaves[record.leaveType]++; 
+            if (leaves.hasOwnProperty(record.leaveType)) {
+                leaves[record.leaveType]++; 
+            }
         } else {
-            // Treat as present (default or shift override)
             finalPresentDays++;
             
-            // Calculate NSA using dynamic shift (now calling async helper)
-            const nsaInfo = await getDailyNsaInfo(emp, date);
-            totalNsaAmount += nsaInfo.amount;
+            // If getDailyNsaInfo was async, we fetch it via a non-blocking helper
+            // Note: If you have specific shift logic in getDailyNsaInfo, 
+            // ensure it is updated to use cached nsaRules.
+            const nsaInfo = calculateDailyNsaLocally(emp, date, record, nsaRules);
             
-            // Store breakdown based on the effective shift key
+            totalNsaAmount += nsaInfo.amount;
             const shiftKey = nsaInfo.shift;
             if (shiftBreakdown.hasOwnProperty(shiftKey)) {
                 shiftBreakdown[shiftKey]++;
@@ -2419,6 +2425,18 @@ async function getMonthlyReportData(emp, month) {
         totalNsaAmount, 
         shiftBreakdown,
         validWorkingDaysCount: validWorkingDays.length
+    };
+}
+
+// Helper to calculate NSA without hitting the database inside a loop
+function calculateDailyNsaLocally(emp, date, record, nsaRules) {
+    // Priority: 1. Specific record shift, 2. Employee default shift
+    const effectiveShiftKey = (record && record.shift) ? record.shift : emp.shift;
+    const rule = nsaRules[effectiveShiftKey] || { amount: 0 };
+    
+    return {
+        shift: effectiveShiftKey,
+        amount: rule.amount || 0
     };
 }
 
@@ -2538,59 +2556,81 @@ function renderSummaryChart(presentDays, leaves) {
 
 
 async function renderDepartmentSummary(month){
-  const tbody=document.querySelector('#deptSummaryTable tbody');
-  tbody.innerHTML='<tr><td colspan="7" class="text-center text-muted">Generating summary...</td></tr>';
+  const tbody = document.querySelector('#deptSummaryTable tbody');
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Generating summary...</td></tr>';
   
+  // 1. Get employees (Uses your new fast cache)
   const allEmployees = await getEmployeesFromDB();
   const activeEmployees = allEmployees.filter(emp => emp.status === 'Active');
   
-  const reportData = [];
+  try {
+    // 2. SPEED BOOST: Fetch all monthly reports at the same time
+    console.log(`Loading reports for ${activeEmployees.length} employees...`);
+    const reportPromises = activeEmployees.map(emp => getMonthlyReportData(emp, month));
+    const allReports = await Promise.all(reportPromises); 
 
-  for (const emp of activeEmployees) {
-      const report = await getMonthlyReportData(emp, month);
-      const { finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount, leaves } = report;
+    const reportData = [];
 
-      if (validWorkingDaysCount === 0) continue; 
+    // 3. Process the results locally
+    allReports.forEach((report, index) => {
+        const emp = activeEmployees[index];
+        const { finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount, leaves } = report;
 
-      if(finalPresentDays > 0 || Object.values(leaves).some(l => l > 0)) {
-        reportData.push({ emp, days: finalPresentDays, nsa: totalNsaAmount, breakdown: shiftBreakdown });
-      }
+        // Skip if no working days in this month
+        if (validWorkingDaysCount === 0) return; 
+
+        // Add to list if they have attendance or leaves
+        if(finalPresentDays > 0 || Object.values(leaves).some(l => l > 0)) {
+          reportData.push({ 
+            emp, 
+            days: finalPresentDays, 
+            nsa: totalNsaAmount, 
+            breakdown: shiftBreakdown 
+          });
+        }
+    });
+
+    // 4. Pagination Logic
+    const totalPages = Math.ceil(reportData.length / ROWS_PER_PAGE);
+    deptSummaryPage = Math.min(deptSummaryPage, totalPages) || 1;
+    const start = (deptSummaryPage - 1) * ROWS_PER_PAGE;
+    
+    tbody.innerHTML = '';
+    
+    if (reportData.length === 0) {
+         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No attendance data or NSA recorded for this month.</td></tr>';
+         document.getElementById('deptSummaryPagination').innerHTML = '';
+         return;
+    }
+
+    // 5. Draw the Table
+    reportData.slice(start, start + ROWS_PER_PAGE).forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+          <td>${item.emp.name}</td>
+          <td>${item.emp.department}</td>
+          <td>${item.days}</td>
+          <td>${item.breakdown.MORNING_8_5 || 0}</td>
+          <td>${item.breakdown.NIGHT_6_3 || 0}</td>
+          <td>${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
+          <td>₹${item.nsa}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // 6. Update Pagination UI
+    renderSummaryPagination(
+      'deptSummaryPagination', 
+      totalPages, 
+      deptSummaryPage, 
+      'renderDepartmentSummary', 
+      'deptSummaryPage',
+      `'${month}'`
+    );
+
+  } catch (error) {
+    console.error("Summary Generation Error:", error);
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error generating summary. Please try again.</td></tr>';
   }
-
-  const totalPages = Math.ceil(reportData.length / ROWS_PER_PAGE);
-  deptSummaryPage = Math.min(deptSummaryPage, totalPages) || 1;
-
-  const start = (deptSummaryPage - 1) * ROWS_PER_PAGE;
-  
-  tbody.innerHTML = '';
-  
-  if (reportData.length === 0) {
-       tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No attendance data or NSA recorded for this month.</td></tr>';
-       document.getElementById('deptSummaryPagination').innerHTML = '';
-       return;
-  }
-
-  reportData.slice(start, start + ROWS_PER_PAGE).forEach(item => {
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-        <td>${item.emp.name}</td>
-        <td>${item.emp.department}</td>
-        <td>${item.days}</td>
-        <td>${item.breakdown.MORNING_8_5 || 0}</td>
-        <td>${item.breakdown.NIGHT_6_3 || 0}</td>
-        <td>${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
-        <td>₹${item.nsa}</td>`;
-    tbody.appendChild(tr);
-  });
-
-  renderSummaryPagination(
-    'deptSummaryPagination', 
-    totalPages, 
-    deptSummaryPage, 
-    'renderDepartmentSummary', 
-    'deptSummaryPage',
-    `'${month}'`
-  );
 }
 
 async function renderDeptMonthlySummary() {
