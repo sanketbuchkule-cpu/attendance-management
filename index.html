@@ -213,7 +213,7 @@
                             <small id="bulkSelectCount" class="fw-bold">0 total selected</small>
                             <div>
                                 <button class="btn btn-xs btn-outline-secondary" onclick="selectVisibleBulk(true)">Select Visible</button>
-                                <button class="btn btn-xs btn-outline-danger" onclick="clearAllBulkSelection()">Clear All</button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="clearAllSelectedEmployees()">Clear All</button>
                             </div>
                         </div>
                         <div id="bulkEmployeeList" class="list-group border rounded" style="max-height: 300px; overflow-y: auto;">
@@ -889,25 +889,29 @@ async function filterBulkEmployeeList() {
     const search = document.getElementById('bulkSearchEmp').value.toLowerCase();
     const listContainer = document.getElementById('bulkEmployeeList');
     
-    // Filter from cache instead of DB to ensure speed
-    const filtered = bulkEmployeeCache.filter(emp => 
-        emp.status === 'Active' &&
-        (!dept || emp.department === dept) &&
-        (emp.name.toLowerCase().includes(search) || emp.id.toString().includes(search))
-    );
+    const filtered = bulkEmployeeCache.filter(emp => {
+        const nameMatch = emp.name.toLowerCase().includes(search);
+        const idMatch = emp.id.toString().toLowerCase().includes(search);
+        const deptMatch = !dept || emp.department === dept;
+        return emp.status === 'Active' && deptMatch && (nameMatch || idMatch);
+    });
 
     listContainer.innerHTML = filtered.map(emp => {
-        const checked = bulkSelectedEmpIds.has(emp.id.toString()) ? 'checked' : '';
+        const isChecked = bulkSelectedEmpIds.has(emp.id.toString()) ? 'checked' : '';
         return `
             <div class="list-group-item py-1 d-flex align-items-center">
-                <input class="form-check-input me-2 bulk-emp-check" type="checkbox" value="${emp.id}" 
-                       data-name="${emp.name}" onchange="toggleBulkEmpSelection(this)" ${checked}>
-                <small>${emp.name} <span class="text-muted">(${emp.id})</span></small>
+                <input class="form-check-input me-2 bulk-emp-check" type="checkbox" 
+                       value="${emp.id}" data-name="${emp.name}" 
+                       onchange="toggleBulkEmpSelection(this)" ${isChecked}>
+                <small>${emp.name} <span class="text-muted">(ID: ${emp.id})</span></small>
             </div>
         `;
     }).join('');
 }
 
+/**
+ * 1. Handles the checkbox click in the list
+ */
 function toggleBulkEmpSelection(checkbox) {
     const id = checkbox.value.toString();
     if (checkbox.checked) {
@@ -919,31 +923,72 @@ function toggleBulkEmpSelection(checkbox) {
     renderSelectedBadges();
 }
 
+/**
+ * 2. Renders the yellow badges with the X button
+ */
 function renderSelectedBadges() {
     const container = document.getElementById('bulkSelectedBadges');
     if (bulkSelectedEmpIds.size === 0) {
         container.innerHTML = '<span class="text-muted">No employees selected</span>';
         return;
     }
+
     container.innerHTML = Array.from(bulkSelectedEmpIds).map(id => {
-        const emp = bulkEmployeeCache.find(e => e.id.toString() === id);
+        // Find employee in cache by ID to handle duplicates
+        const emp = bulkEmployeeCache.find(e => e.id.toString() === id.toString());
+        const displayName = emp ? emp.name : id;
+        
         return `
-            <span class="badge bg-warning text-dark me-1 mb-1 p-2">
-                ${emp ? emp.name : id} 
-                <i class="bi bi-x-circle ms-1 cursor-pointer" onclick="removeBulkBadge('${id}')"></i>
+            <span class="badge bg-warning text-dark me-1 mb-1 p-2 d-inline-flex align-items-center">
+                ${displayName} (${id})
+                <i class="bi bi-x-circle ms-2 cursor-pointer text-danger" 
+                   style="font-size: 1rem;" 
+                   onclick="removeBulkEmployee('${id}')"></i>
             </span>`;
     }).join('');
 }
 
-function removeBulkBadge(id) {
+/**
+ * 3. Removes a specific employee (syncs with checkboxes)
+ * This replaces your old 'removeBulkBadge' function
+ */
+function removeBulkEmployee(id) {
+    // Remove from data
     bulkSelectedEmpIds.delete(id.toString());
+    
+    // Physically uncheck the box in the list if it is visible
+    const checkbox = document.querySelector(`.bulk-emp-check[value="${id}"]`);
+    if (checkbox) checkbox.checked = false;
+    
     updateBulkCount();
     renderSelectedBadges();
-    filterBulkEmployeeList(); 
 }
 
+/**
+ * 4. Resets everything (The "Clear All" logic)
+ */
+function clearAllSelectedEmployees() {
+    // Clear the Set
+    bulkSelectedEmpIds.clear();
+    
+    // Uncheck every checkbox visible on the current screen
+    const allChecks = document.querySelectorAll('.bulk-emp-check');
+    allChecks.forEach(cb => {
+        cb.checked = false;
+    });
+    
+    updateBulkCount();
+    renderSelectedBadges();
+}
+
+/**
+ * 5. Updates the count label
+ */
 function updateBulkCount() {
-    document.getElementById('bulkSelectCount').textContent = `${bulkSelectedEmpIds.size} total selected`;
+    const label = document.getElementById('bulkSelectCount');
+    if (label) {
+        label.textContent = `${bulkSelectedEmpIds.size} total selected`;
+    }
 }
 
 // --- ENHANCED DATE HELPERS ---
