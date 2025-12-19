@@ -816,60 +816,78 @@
 
 // --- AUTHENTICATION & AUTO-LOAD LOGIC ---
 
-firebase.auth().onAuthStateChanged((user) => {
+// --- SECURE AUTHENTICATION CONTROLLER ---
+
+firebase.auth().onAuthStateChanged(async (user) => {
     const loginOverlay = document.getElementById('loginOverlay');
     
     if (user) {
-        // 1. Success! Hide login screen
+        console.log("User verified: ", user.email);
+        
+        // 1. Hide the login screen
         if(loginOverlay) loginOverlay.style.display = 'none';
         
-        // 2. Load data automatically now that we are authenticated
-        // This prevents the "Error loading" alert and avoids manual refresh
-        initializeSystemData();
+        // 2. Load the data ONLY now that we are logged in
+        // This stops the "Missing Permissions" error alert
+        await startSecureSession();
     } else {
-        // User is logged out, show login screen
+        // User is not logged in, show the login screen
         if(loginOverlay) loginOverlay.style.display = 'flex';
+        console.log("No active session. Waiting for login...");
     }
 });
 
-// New helper to wrap your initial DB calls
-async function initializeSystemData() {
+/**
+ * Loads all initial data and refreshes the UI after successful login
+ */
+async function startSecureSession() {
     try {
-        console.log("Authenticated. Loading data...");
-        // Call your main data fetchers here
+        // Fetch employees from Firestore
         await getEmployeesFromDB(); 
         
-        // If you have a main dashboard table that needs to refresh:
-        // if (typeof renderEmployeeTable === "function") renderEmployeeTable();
+        // IMPORTANT: Call your table rendering function here 
+        // so the data appears immediately without a refresh.
+        if (typeof renderEmployeeTable === "function") {
+            renderEmployeeTable(); 
+        }
         
+        console.log("Dashboard fully loaded.");
     } catch (error) {
-        console.error("Delayed load error:", error);
+        // If an error still happens here, it's likely a rule issue, not a timing issue
+        console.error("Session start error:", error);
     }
 }
 
-// Updated Login Function
+/**
+ * Handles the Login button click
+ */
 function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginError');
 
-    // Sign in—the onAuthStateChanged above will handle the rest automatically
     firebase.auth().signInWithEmailAndPassword(email, pass)
+        .then(() => {
+            console.log("Login successful!");
+            // The onAuthStateChanged above will notice the change and run startSecureSession()
+        })
         .catch((error) => {
-            console.error("Login failed:", error.message);
+            console.error("Login failed:", error.code);
             if(errorEl) {
-                errorEl.textContent = "Invalid email or password.";
+                errorEl.textContent = "Invalid credentials. Please try again.";
                 errorEl.style.display = 'block';
             }
         });
 }
 
-// Logout Function
+/**
+ * Handles the Logout button click
+ */
 function logout() {
     if(confirm("Are you sure you want to logout?")) {
         firebase.auth().signOut().then(() => {
-            // Page will automatically show login screen via onAuthStateChanged
-            console.log("Logged out.");
+            // Force a page reload to clear all cached data and show login screen
+            window.location.reload();
         });
     }
 }
@@ -3165,18 +3183,22 @@ function exportMonthlyBreakdown() {
 }
 
 
-// Call dropdown population on DOM load
-document.addEventListener('DOMContentLoaded', async () => {
-  await renderHolidaysList(); 
-  await renderNsaRules(); 
-  await populateDepartmentFilter();
-  await populateDeptDropdown('deptSummaryDept');
-  await populateDeptDropdown('yearlySummaryDept');
-  await initAttendance(); 
-  await renderEmployees(); 
-  document.getElementById('yearlySummaryYear').value = new Date().getFullYear(); 
-  document.getElementById('summaryMonth').value = new Date().toISOString().slice(0,7);
-  document.getElementById('deptSummaryMonth').value = new Date().toISOString().slice(0,7);
+// ONLY for UI initializations that don't need the database
+document.addEventListener('DOMContentLoaded', () => {
+  // Set default dates (Safe to do before login)
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  if(document.getElementById('yearlySummaryYear')) 
+    document.getElementById('yearlySummaryYear').value = currentYear;
+  
+  if(document.getElementById('summaryMonth')) 
+    document.getElementById('summaryMonth').value = currentMonth;
+  
+  if(document.getElementById('deptSummaryMonth')) 
+    document.getElementById('deptSummaryMonth').value = currentMonth;
+
+  console.log("UI Initialized. Waiting for Authentication...");
 });
 
 async function handleExcelUpload(event) {
