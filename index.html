@@ -816,24 +816,63 @@
 
 // --- AUTHENTICATION & AUTO-LOAD LOGIC ---
 
+/**
+ * NEW WRAPPER FUNCTION
+ * This organizes all your data loading so it happens in the right order.
+ */
+/**
+ * This function is the ONLY thing allowed to load data on startup.
+ */
+async function initializeSystemData() {
+    try {
+        console.log("🔄 Starting Data Sequence...");
+
+        // 1. Fetch from DB into your global cache
+        // Ensure this fills whatever variable 'renderEmployees' uses
+        const data = await getEmployeesFromDB(); 
+        console.log("📦 Data Fetched:", data ? data.length : 0, "employees found.");
+
+        // 2. Populate Dropdowns and Rules
+        await renderHolidaysList(); 
+        await renderNsaRules(); 
+        await populateDepartmentFilter();
+        await populateDeptDropdown('deptSummaryDept');
+        await populateDeptDropdown('yearlySummaryDept');
+        
+        // 3. Initialize and Force Render
+        await initAttendance();  
+        
+        // This is the specific call that makes employees appear on the dashboard
+        if (typeof renderEmployees === "function") {
+            console.log("🎨 Drawing Dashboard...");
+            await renderEmployees(); 
+        }
+
+        console.log("🚀 Dashboard Ready!");
+    } catch (error) {
+        // If you see this in console, your Firestore Rules are likely the issue
+        console.error("⛔ Initialization Blocked:", error.message);
+    }
+}
+
 // --- SECURE AUTHENTICATION CONTROLLER ---
 
+// --- CENTRAL AUTH CONTROLLER ---
 firebase.auth().onAuthStateChanged(async (user) => {
     const loginOverlay = document.getElementById('loginOverlay');
     
     if (user) {
-        console.log("User verified: ", user.email);
-        
-        // 1. Hide the login screen
+        console.log("✅ Auth Success:", user.email);
         if(loginOverlay) loginOverlay.style.display = 'none';
         
-        // 2. Load the data ONLY now that we are logged in
-        // This stops the "Missing Permissions" error alert
-        await startSecureSession();
+        // Small delay to ensure Firestore token is fully ready
+        setTimeout(async () => {
+            await initializeSystemData();
+        }, 300);
+
     } else {
-        // User is not logged in, show the login screen
+        console.log("❌ No User Logged In");
         if(loginOverlay) loginOverlay.style.display = 'flex';
-        console.log("No active session. Waiting for login...");
     }
 });
 
@@ -1261,12 +1300,14 @@ async function processBulkAttendance() {
 // EMPLOYEES
 async function getEmployeesFromDB() {
     try {
-        const snapshot = await db.collection(EMPLOYEES_COLLECTION).get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const snapshot = await db.collection('employees').get();
+        bulkEmployeeCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return bulkEmployeeCache;
     } catch (error) {
-        console.error("Error fetching employees:", error);
-        alert("Error loading employee list. Check console for details.");
-        return [];
+        // CHANGE THIS: Use console.log instead of alert
+        console.log("Database fetch blocked (waiting for login):", error.message);
+        // Do not use alert() here
+        return []; 
     }
 }
 async function saveEmployeeToDB(employee, isNew) {
