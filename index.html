@@ -13,6 +13,7 @@
   
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
 
 
  <style>
@@ -136,6 +137,16 @@
 </style>
 </head>
 <body>
+
+<div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; align-items:center; justify-content:center;">
+    <div style="width:300px; padding:20px; border:1px solid #ddd; border-radius:8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h4 class="text-center mb-3">Attendance Login</h4>
+        <input type="email" id="loginEmail" class="form-control mb-2" placeholder="Email">
+        <input type="password" id="loginPassword" class="form-control mb-3" placeholder="Password">
+        <button class="btn btn-primary w-100" onclick="handleLogin()">Login</button>
+        <p id="loginError" class="text-danger small mt-2" style="display:none;"></p>
+    </div>
+</div>
 
 <div class="modal fade" id="employeeModal" tabindex="-1" aria-labelledby="employeeModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -797,6 +808,36 @@
   // Save workbook as Excel file
   XLSX.writeFile(wb, 'Sample_Employees.xlsx');
 });
+
+// --- LOGIN LOGIC ---
+function handleLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginError');
+
+    firebase.auth().signInWithEmailAndPassword(email, pass)
+        .then(() => {
+            // Login successful
+            document.getElementById('loginOverlay').style.display = 'none';
+        })
+        .catch((error) => {
+            errorEl.textContent = "Invalid Login Details";
+            errorEl.style.display = 'block';
+        });
+}
+
+// Check if user is already logged in when page loads
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        document.getElementById('loginOverlay').style.display = 'none';
+    } else {
+        document.getElementById('loginOverlay').style.display = 'flex';
+    }
+});
+
+function logout() {
+    firebase.auth().signOut();
+}
 /*********************
  * CONSTANTS
  *********************/
