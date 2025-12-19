@@ -837,13 +837,16 @@ let deptMonthlySummaryPage = 1;
 
 let bulkSelectedEmpIds = new Set();
 let bulkSpecificDates = [];
-let bulkEmployeeCache = []; // Optimization: Store employees locally to prevent slow DB calls during search
+let bulkEmployeeCache = []; 
+let currentBulkPage = 1;      // Added for pagination
+const itemsPerPage = 8;       // Added for pagination
 
 // Initialize Bulk Modal
 async function openAdvancedBulkTool() {
     // 1. Reset selection states
     bulkSelectedEmpIds.clear();
     bulkSpecificDates = [];
+    currentBulkPage = 1; // Reset to page 1 on open
     
     // 2. Clear UI elements in the modal
     const badges = document.getElementById('bulkSelectedBadges');
@@ -883,12 +886,13 @@ async function openAdvancedBulkTool() {
     modalInstance.show();
 }
 
-// Logic to keep selection persistent while searching (Optimized with Cache)
+// Logic to keep selection persistent while searching (Optimized with Cache & Pagination)
 async function filterBulkEmployeeList() {
     const dept = document.getElementById('bulkDeptFilter').value;
     const search = document.getElementById('bulkSearchEmp').value.toLowerCase();
     const listContainer = document.getElementById('bulkEmployeeList');
     
+    // Step A: Filter logic
     const filtered = bulkEmployeeCache.filter(emp => {
         const nameMatch = emp.name.toLowerCase().includes(search);
         const idMatch = emp.id.toString().toLowerCase().includes(search);
@@ -896,7 +900,16 @@ async function filterBulkEmployeeList() {
         return emp.status === 'Active' && deptMatch && (nameMatch || idMatch);
     });
 
-    listContainer.innerHTML = filtered.map(emp => {
+    // Step B: Pagination Logic
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    if (currentBulkPage > totalPages) currentBulkPage = 1;
+
+    const start = (currentBulkPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const paginatedItems = filtered.slice(start, end);
+
+    // Step C: Render List
+    listContainer.innerHTML = paginatedItems.map(emp => {
         const isChecked = bulkSelectedEmpIds.has(emp.id.toString()) ? 'checked' : '';
         return `
             <div class="list-group-item py-1 d-flex align-items-center">
@@ -907,6 +920,39 @@ async function filterBulkEmployeeList() {
             </div>
         `;
     }).join('');
+
+    // Step D: Render Pagination UI
+    renderPaginationControls(totalPages);
+}
+
+// Helper for Pagination Controls
+function renderPaginationControls(totalPages) {
+    let controls = document.getElementById('bulkPagination');
+    if (!controls) {
+        controls = document.createElement('div');
+        controls.id = 'bulkPagination';
+        controls.className = 'd-flex justify-content-center mt-2 gap-2';
+        document.getElementById('bulkEmployeeList').after(controls);
+    }
+
+    if (totalPages <= 1) {
+        controls.innerHTML = '';
+        return;
+    }
+
+    controls.innerHTML = `
+        <button class="btn btn-sm btn-outline-dark" ${currentBulkPage === 1 ? 'disabled' : ''} 
+                onclick="changeBulkPage(-1)">Prev</button>
+        <span class="small align-self-center">Page ${currentBulkPage} of ${totalPages}</span>
+        <button class="btn btn-sm btn-outline-dark" ${currentBulkPage === totalPages ? 'disabled' : ''} 
+                onclick="changeBulkPage(1)">Next</button>
+    `;
+}
+
+// Helper to Change Page
+function changeBulkPage(step) {
+    currentBulkPage += step;
+    filterBulkEmployeeList();
 }
 
 /**
@@ -950,7 +996,6 @@ function renderSelectedBadges() {
 
 /**
  * 3. Removes a specific employee (syncs with checkboxes)
- * This replaces your old 'removeBulkBadge' function
  */
 function removeBulkEmployee(id) {
     // Remove from data
