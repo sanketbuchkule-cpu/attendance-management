@@ -3183,22 +3183,18 @@ function exportMonthlyBreakdown() {
 }
 
 
-// ONLY for UI initializations that don't need the database
-document.addEventListener('DOMContentLoaded', () => {
-  // Set default dates (Safe to do before login)
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().toISOString().slice(0, 7);
-
-  if(document.getElementById('yearlySummaryYear')) 
-    document.getElementById('yearlySummaryYear').value = currentYear;
-  
-  if(document.getElementById('summaryMonth')) 
-    document.getElementById('summaryMonth').value = currentMonth;
-  
-  if(document.getElementById('deptSummaryMonth')) 
-    document.getElementById('deptSummaryMonth').value = currentMonth;
-
-  console.log("UI Initialized. Waiting for Authentication...");
+// Call dropdown population on DOM load
+document.addEventListener('DOMContentLoaded', async () => {
+  await renderHolidaysList(); 
+  await renderNsaRules(); 
+  await populateDepartmentFilter();
+  await populateDeptDropdown('deptSummaryDept');
+  await populateDeptDropdown('yearlySummaryDept');
+  await initAttendance(); 
+  await renderEmployees(); 
+  document.getElementById('yearlySummaryYear').value = new Date().getFullYear(); 
+  document.getElementById('summaryMonth').value = new Date().toISOString().slice(0,7);
+  document.getElementById('deptSummaryMonth').value = new Date().toISOString().slice(0,7);
 });
 
 async function handleExcelUpload(event) {
