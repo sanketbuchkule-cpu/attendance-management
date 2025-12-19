@@ -790,7 +790,8 @@
     const app = firebase.initializeApp(firebaseConfig);
     const db = app.firestore();
     // ---------------------------------------------
-
+// This stores the employee data so we don't have to keep asking the internet
+  let bulkEmployeeCache = [];
     document.getElementById('downloadSampleExcel').addEventListener('click', () => {
   // Sample employee data
   const data = [
@@ -924,10 +925,8 @@ function handleLogin() {
  */
 function logout() {
     if(confirm("Are you sure you want to logout?")) {
-        firebase.auth().signOut().then(() => {
-            // Force a page reload to clear all cached data and show login screen
-            window.location.reload();
-        });
+        bulkEmployeeCache = []; // Clear data on logout
+        firebase.auth().signOut();
     }
 }
 /*********************
@@ -970,7 +969,7 @@ let deptMonthlySummaryPage = 1;
 
 let bulkSelectedEmpIds = new Set();
 let bulkSpecificDates = [];
-let bulkEmployeeCache = []; 
+
 let currentBulkPage = 1;      // Added for pagination
 const itemsPerPage = 8;       // Added for pagination
 
@@ -1299,14 +1298,19 @@ async function processBulkAttendance() {
 
 // EMPLOYEES
 async function getEmployeesFromDB() {
+    // 1. If we already have data, return it immediately (NO WAITING)
+    if (bulkEmployeeCache.length > 0) {
+        return bulkEmployeeCache;
+    }
+
+    // 2. If the tank is empty, go get the data from Firebase
     try {
+        console.log("Fetching fresh data from Firestore...");
         const snapshot = await db.collection('employees').get();
         bulkEmployeeCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         return bulkEmployeeCache;
     } catch (error) {
-        // CHANGE THIS: Use console.log instead of alert
-        console.log("Database fetch blocked (waiting for login):", error.message);
-        // Do not use alert() here
+        console.log("Database fetch pending or blocked:", error.message);
         return []; 
     }
 }
@@ -1808,6 +1812,7 @@ async function saveEmployee(){
   if(await saveEmployeeToDB(emp, index === '')) {
     bootstrap.Modal.getInstance(employeeModal).hide();
     clearForm();
+    bulkEmployeeCache = [];
     await renderEmployees();
     await populateDepartmentFilter(); 
     await populateDeptDropdown('deptSummaryDept'); 
@@ -1854,6 +1859,7 @@ async function saveBulkEmployees() {
 
   try {
       await batch.commit();
+      bulkEmployeeCache = []; // Clear the cache so it fetches the new list
       await renderEmployees();
       await populateDepartmentFilter();
       await populateAttendanceEmployees();
