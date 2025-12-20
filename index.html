@@ -15,7 +15,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
 
-
  <style>
     /* Global Background & Base Cards */
     body { background: #f5f7fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -51,7 +50,7 @@
         text-align: center;
     }
 
-    /* Status-Based Block Colors (As per screenshots) */
+    /* Status-Based Block Colors */
     .date-cell.bg-success { background-color: #d1e7dd !important; color: #0f5132 !important; border-color: #badbcc !important; }
     .date-cell.bg-danger { background-color: #f8d7da !important; color: #842029 !important; border-color: #f5c2c7 !important; }
     .date-cell.bg-info { background-color: #cff4fc !important; color: #055160 !important; border: 2px solid #0dcaf0 !important; }
@@ -134,6 +133,15 @@
     /* Tab Navigation Enhancements */
     .nav-tabs .nav-link { color: #495057; font-weight: bold; border: none; padding: 12px 20px; }
     .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background: transparent; }
+
+    /* MOBILE RESPONSIVE FIXES (Only added this part) */
+    @media (max-width: 768px) {
+        #calendar { grid-template-columns: repeat(3, 1fr) !important; gap: 5px; }
+        #calendarHeaders { display: none; }
+        .date-cell { min-height: 70px; font-size: 0.8rem; }
+        .d-flex.gap-2.flex-wrap > button, .d-flex.gap-2.flex-wrap > .dropdown { flex: 1 1 45%; }
+        .modal-dialog { margin: 0.5rem; }
+    }
 </style>
 </head>
 <body>
@@ -430,7 +438,6 @@
   </div>
 </div>
 
-
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <span class="navbar-brand">Leave & NSA Tracker</span>
@@ -463,12 +470,10 @@
     <div class="tab-content" id="mainTabsContent">
 
         <div class="tab-pane fade show active" id="management-content" role="tabpanel" aria-labelledby="management-tab">
-            
             <div class="card mb-4">
                 <div class="card-body">
                     <h4 class="mb-3">NSA Rules & Settings</h4>
-                    <div id="nsaRulesContainer" class="row g-3">
-                        </div>
+                    <div id="nsaRulesContainer" class="row g-3"></div>
                     <button class="btn btn-success mt-3" onclick="saveNsaRules()">Save NSA Rules</button>
                 </div>
             </div>
@@ -498,18 +503,16 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <h4 class="mb-0">Employee Management</h4>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
                     <button class="btn btn-warning fw-bold" onclick="openAdvancedBulkTool()">
-    <i class="bi bi-layers-fill"></i> Advanced Bulk Tool
-</button>
+                        <i class="bi bi-layers-fill"></i> Advanced Bulk Tool
+                    </button>
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#employeeModal" onclick="clearForm()">+ Add Employee</button>
                     <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#bulkEmployeeModal">+ Bulk Add</button>
                     <button id="downloadSampleExcel" class="btn btn-info">Sample Excel</button>
-                    <button class="btn btn-success" onclick="document.getElementById('empExcelFile').click()">
-                        Upload Excel
-                    </button>
+                    <button class="btn btn-success" onclick="document.getElementById('empExcelFile').click()">Upload Excel</button>
                 </div>
             </div>
             <input type="file" id="empExcelFile" accept=".xlsx,.xls" style="display:none" onchange="handleExcelUpload(event)">
@@ -526,7 +529,6 @@
                             <input class="form-control" id="employeeSearch" placeholder="Search employee..." oninput="filterEmployees()" />
                         </div>
                     </div>
-
                     <div class="table-responsive">
                         <table class="table align-middle" id="employeeTable">
                             <thead>
@@ -541,27 +543,22 @@
                             </thead>
                             <tbody></tbody>
                         </table>
-
-                        <nav>
-                            <ul class="pagination" id="employeePagination"></ul>
-                        </nav>
+                        <nav><ul class="pagination" id="employeePagination"></ul></nav>
                     </div>
                 </div>
             </div>
-            </div>
+        </div>
+
         <div class="tab-pane fade" id="attendance-content" role="tabpanel" aria-labelledby="attendance-tab">
             <div class="card mb-4">
                 <div class="card-body">
                     <h4 class="mb-3">Attendance Calendar</h4>
                     <div class="row g-3 mb-3">
-                        
                         <div class="col-md-3 position-relative">
                             <label class="form-label">Search Employee</label>
                             <input type="text" class="form-control" id="attendanceSearchInput" placeholder="Type name or ID..." oninput="filterAttendanceEmployees()">
                             <input type="hidden" id="attendanceEmployee">
-                            
-                            <div id="attendanceSearchResults" class="list-group position-absolute w-100 mt-1 shadow search-results-container" style="z-index: 1000; max-height: 200px; overflow-y: auto; display: none;">
-                                </div>
+                            <div id="attendanceSearchResults" class="list-group position-absolute w-100 mt-1 shadow search-results-container" style="z-index: 1000; max-height: 200px; overflow-y: auto; display: none;"></div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Month</label>
@@ -583,7 +580,6 @@
                                 </ul>
                             </div>
                             <button class="btn btn-info" onclick="openShiftOverrideModal()">Mark Shift Change</button>
-
                             <button class="btn btn-secondary" onclick="clearSelected()">Clear Selected</button>
                             <button class="btn btn-danger" onclick="clearAllForEmployee()">Clear Month</button>
                         </div>
@@ -603,20 +599,17 @@
                 </div>
             </div>
         </div>
-        <div class="tab-pane fade" id="summary-content" role="tabpanel" aria-labelledby="summary-tab">
 
+        <div class="tab-pane fade" id="summary-content" role="tabpanel" aria-labelledby="summary-tab">
             <div class="card mb-4">
                 <div class="card-body">
                     <h4 class="mb-3">Employee Monthly Summary</h4>
                     <div class="row g-3 mb-4">
-                        
                         <div class="col-md-4 position-relative">
                             <label class="form-label">Search Employee</label>
                             <input type="text" class="form-control" id="summarySearchInput" placeholder="Type name or ID..." oninput="filterSummaryEmployees()">
                             <input type="hidden" id="summaryEmployee">
-                            
-                            <div id="summarySearchResults" class="list-group position-absolute w-100 mt-1 shadow search-results-container" style="z-index: 1000; max-height: 200px; overflow-y: auto; display: none;">
-                                </div>
+                            <div id="summarySearchResults" class="list-group position-absolute w-100 mt-1 shadow search-results-container" style="z-index: 1000; max-height: 200px; overflow-y: auto; display: none;"></div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Month</label>
@@ -628,7 +621,6 @@
                             <button class="btn btn-success" onclick="exportEmpSummary()">Export Employee</button>
                         </div>
                     </div>
-
                     <div class="row g-3 mb-4">
                         <div class="col-md-9" id="employeeSummary">
                             <div class="alert alert-info text-center">Select an employee and month, and click 'View Summary' above.</div>
@@ -648,7 +640,6 @@
                         <h4 class="mb-0">All Department Monthly Summary</h4>
                         <button class="btn btn-info" onclick="exportDeptSummary()">Export All Monthly Data</button>
                     </div>
-
                     <div class="table-responsive">
                         <table class="table table-bordered" id="deptSummaryTable">
                             <thead class="table-light">
@@ -683,38 +674,22 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Department</label>
-                            <select class="form-select" id="deptSummaryDept">
-                                <option value="">All Departments</option>
-                            </select>
+                            <select class="form-select" id="deptSummaryDept"><option value="">All Departments</option></select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Month</label>
                             <input type="month" class="form-control" id="deptSummaryMonth">
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button class="btn btn-primary" onclick="renderDeptMonthlySummary()">View Breakdown</button>
-                        </div>
+                        <div class="col-md-4 d-flex align-items-end"><button class="btn btn-primary" onclick="renderDeptMonthlySummary()">View Breakdown</button></div>
                     </div>
-                    
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" id="deptMonthlySummary">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Employee</th>
-                                    <th>P (Total)</th>
-                                    <th>M-Shift (SC-M)</th>
-                                    <th>N1-Shift (SC-N6-3)</th>
-                                    <th>N2-Shift (SC-N9-6)</th>
-                                    <th>PL</th>
-                                    <th>CL</th>
-                                    <th>SL</th>
-                                    <th>FL</th>
-                                    <th>Total NSA (₹)</th>
+                                    <th>Employee</th><th>P (Total)</th><th>M-Shift (SC-M)</th><th>N1-Shift (SC-N6-3)</th><th>N2-Shift (SC-N9-6)</th><th>PL</th><th>CL</th><th>SL</th><th>FL</th><th>Total NSA (₹)</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr><td colspan="10" class="text-center text-muted">Select a department and month to view breakdown.</td></tr>
-                            </tbody>
+                            <tbody><tr><td colspan="10" class="text-center text-muted">Select a department and month to view breakdown.</td></tr></tbody>
                         </table>
                         <nav><ul class="pagination" id="deptMonthlySummaryPagination"></ul></nav>
                     </div>
@@ -737,40 +712,22 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Department Filter</label>
-                            <select class="form-select" id="yearlySummaryDept">
-                                <option value="">All Departments</option>
-                            </select>
+                            <select class="form-select" id="yearlySummaryDept"><option value="">All Departments</option></select>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button class="btn btn-primary" onclick="renderYearlySummary()">Generate Yearly Summary</button>
-                        </div>
+                        <div class="col-md-4 d-flex align-items-end"><button class="btn btn-primary" onclick="renderYearlySummary()">Generate Yearly Summary</button></div>
                     </div>
-
                     <div class="table-responsive" id="yearlySummaryResults">
                         <table class="table table-bordered table-striped">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Employee</th>
-                                    <th>Department</th>
-                                    <th>P (Total)</th>
-                                    <th>M-Shift (SC-M)</th>
-                                    <th>N1-Shift (SC-N6-3)</th>
-                                    <th>N2-Shift (SC-N9-6)</th>
-                                    <th>PL</th>
-                                    <th>CL</th>
-                                    <th>SL</th>
-                                    <th>FL</th>
-                                    <th>Total NSA (₹)</th>
+                                    <th>Employee</th><th>Department</th><th>P (Total)</th><th>M-Shift (SC-M)</th><th>N1-Shift (SC-N6-3)</th><th>N2-Shift (SC-N9-6)</th><th>PL</th><th>CL</th><th>SL</th><th>FL</th><th>Total NSA (₹)</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr><td colspan="11" class="text-center text-muted">Select a year and click 'Generate Yearly Summary'.</td></tr>
-                            </tbody>
+                            <tbody><tr><td colspan="11" class="text-center text-muted">Select a year and click 'Generate Yearly Summary'.</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
