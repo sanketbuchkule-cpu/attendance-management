@@ -779,16 +779,16 @@
     // --- FIREBASE INITIALIZATION & CONFIGURATION ---
     // !!! IMPORTANT: REPLACE WITH YOUR ACTUAL FIREBASE CONFIGURATION !!!
  const firebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.FIREBASE_SENDER_ID,
-    appId: process.env.FIREBASE_APP_ID
-};
+    apiKey: "AIzaSyD-n4_2uM2yqVrQ2Z58qS4lg_EJD4bTAVI",
+    authDomain: "leave-nsa-tracker.firebaseapp.com",
+    projectId: "leave-nsa-tracker",
+    storageBucket: "leave-nsa-tracker.firebasestorage.app",
+    messagingSenderId: "851559376572",
+    appId: "1:851559376572:web:978a86f0468ccc535c52b9"
+  };
 
-const app = firebase.initializeApp(firebaseConfig);
-const db = app.firestore();
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = app.firestore();
     // ---------------------------------------------
 // This stores the employee data so we don't have to keep asking the internet
   let bulkEmployeeCache = [];
