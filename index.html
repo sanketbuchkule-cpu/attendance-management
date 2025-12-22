@@ -284,13 +284,13 @@
                     <div class="col-md-3">
                         <h6 class="fw-bold">3. Attendance Action</h6>
                         <select class="form-select mb-3" id="bulkActionType">
-                            <option value="PRESENT">Mark PRESENT</option>
-                            <option value="PL">Mark PL</option>
-                            <option value="CL">Mark CL</option>
-                            <option value="SL">Mark SL</option>
-                            <option value="FL">Mark FL</option>
-                            <optgroup label="Shift Override" id="bulkShiftGroup"></optgroup>
-                        </select>
+    <option value="PRESENT">Mark PRESENT</option>
+    <option value="PL">Mark PL</option>
+    <option value="CL">Mark CL</option>
+    <option value="SL">Mark SL</option>
+    <option value="FL">Mark FL</option>
+    <option value="COFF">Mark COFF</option> <optgroup label="Shift Override" id="bulkShiftGroup"></optgroup>
+</select>
                     </div>
                 </div>
             </div>
@@ -595,6 +595,8 @@
                                     <li><a class="dropdown-item" onclick="markSelected('LEAVE','CL')">CL</a></li>
                                     <li><a class="dropdown-item" onclick="markSelected('LEAVE','SL')">SL</a></li>
                                     <li><a class="dropdown-item" onclick="markSelected('LEAVE','FL')">FL</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item fw-bold" onclick="markSelected('LEAVE','COFF')">COFF</a></li>
                                 </ul>
                             </div>
                             <button class="btn btn-info" onclick="openShiftOverrideModal()">Mark Shift Change</button>
@@ -695,14 +697,29 @@
                         <div class="col-md-4 d-flex align-items-end"><button class="btn btn-primary" onclick="renderDeptMonthlySummary()">View Breakdown</button></div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped" id="deptMonthlySummary">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Employee</th><th>P (Total)</th><th>M-Shift (SC-M)</th><th>N1-Shift (SC-N6-3)</th><th>N2-Shift (SC-N9-6)</th><th>PL</th><th>CL</th><th>SL</th><th>FL</th><th>Total NSA (₹)</th>
-                                </tr>
-                            </thead>
-                            <tbody><tr><td colspan="10" class="text-center text-muted">Select a department and month to view breakdown.</td></tr></tbody>
-                        </table>
+                       <table class="table table-bordered table-striped" id="deptMonthlySummary">
+    <thead class="table-light">
+        <tr>
+            <th>Employee</th>
+            <th>P (Total)</th>
+            <th>M-Shift (SC-M)</th>
+            <th>N1-Shift (SC-N1)</th>
+            <th>N2-Shift (SC-N2)</th>
+            <th>PL</th>
+            <th>CL</th>
+            <th>SL</th>
+            <th>FL</th>
+            <th class="table-info">COFF</th> <th class="table-warning">FH</th> <th>Total NSA (₹)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="12" class="text-center text-muted">
+                Select a department and month to view breakdown.
+            </td>
+        </tr>
+    </tbody>
+</table>
                         <nav><ul class="pagination justify-content-center" id="deptMonthlySummaryPagination"></ul></nav>
                     </div>
                 </div>
@@ -1208,6 +1225,7 @@ async function processBulkAttendance() {
     let datesToProcess = [];
     const activeTab = document.querySelector('#dateTab .active').getAttribute('data-bs-target');
     
+    // 1. Gather Dates
     if (activeTab === '#tabRange') {
         const start = document.getElementById('bulkDateFrom').value;
         const end = document.getElementById('bulkDateTo').value;
@@ -1227,36 +1245,60 @@ async function processBulkAttendance() {
     const action = document.getElementById('bulkActionType').value;
     const batch = db.batch();
     
+    // 2. Process Records
     bulkSelectedEmpIds.forEach(empId => {
         datesToProcess.forEach(date => {
             const recordKey = `${empId}_${date}`;
             const ref = db.collection(ATTENDANCE_COLLECTION).doc(recordKey);
             
-            let record = { empId, date, docId: recordKey };
+            let record = { 
+                empId, 
+                date, 
+                docId: recordKey,
+                customShift: null,
+                leaveType: null
+            };
             
+            // Handle Shift Overrides
             if (action.startsWith('SHIFT_')) {
                 record.status = 'PRESENT';
                 record.customShift = action.replace('SHIFT_', '');
-            } else if (['PL','CL','SL','FL'].includes(action)) {
+            } 
+            // Handle Leaves (Added COFF here)
+            else if (['PL','CL','SL','FL','COFF'].includes(action)) {
                 record.status = 'LEAVE';
                 record.leaveType = action;
-            } else {
+            } 
+            // Handle Regular Presence (Works for weekends too)
+            else {
                 record.status = 'PRESENT';
                 record.leaveType = null;
                 record.customShift = null;
             }
+            
             batch.set(ref, record);
         });
     });
 
+    // 3. Commit and Refresh
     try {
         await batch.commit();
         alert('Bulk processing complete!');
+        
+        // Cleanup UI
+        bulkSpecificDates = []; 
+        if(document.getElementById('specificDateList')) {
+            document.getElementById('specificDateList').innerHTML = '';
+        }
+        
         bootstrap.Modal.getInstance(document.getElementById('advancedBulkModal')).hide();
-        renderCalendar();
+        
+        // Refresh the calendar and summary views
+        if (typeof renderCalendar === "function") renderCalendar();
+        
     } catch(e) {
-        console.error(e);
-        alert('Bulk update failed');
+        console.error("Bulk Processing Error: ", e);
+        alert('Bulk update failed. Please check console for details.');
     }
 }
 
@@ -1311,11 +1353,32 @@ async function saveEmployeeToDB(employee, isNew) {
 }
 async function deleteEmployeeFromDB(id) {
     try {
-        await db.collection(EMPLOYEES_COLLECTION).doc(id).delete();
+        const batch = db.batch();
+        const targetId = String(id).trim(); // Ensure no hidden spaces
+
+        // 1. Fetch all attendance records specifically by the 'empId' field
+        const snapshot = await db.collection('attendance')
+            .where('empId', '==', targetId)
+            .get();
+
+        // 2. Add found records to the batch
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // 3. Delete the employee document itself
+        const empRef = db.collection('employees').doc(targetId);
+        batch.delete(empRef);
+
+        // 4. Execute and wait for confirmation
+        await batch.commit();
+
+        // 5. CRITICAL: Force a small delay to ensure Firestore global indexes sync
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
         return true;
     } catch (error) {
-        console.error("Error deleting employee:", error);
-        alert("Error deleting employee. Check console for details.");
+        console.error("Deep Clean failed:", error);
         return false;
     }
 }
@@ -1804,32 +1867,42 @@ function renderPagination(totalPages){
 
 async function deleteSelectedEmployees() {
     if (selectedEmployeeIds.size === 0) return alert("Please select employees to remove.");
-    if (!confirm(`Are you sure you want to delete ${selectedEmployeeIds.size} employees?`)) return;
-
-    const batch = db.batch();
-    selectedEmployeeIds.forEach(id => {
-        batch.delete(db.collection(EMPLOYEES_COLLECTION).doc(id));
-    });
+    if (!confirm(`Are you sure you want to delete ${selectedEmployeeIds.size} employees and ALL their attendance history?`)) return;
 
     try {
-        await batch.commit();
-        
+        // Show a loading state if you have one
+        console.log(`Starting bulk deletion for ${selectedEmployeeIds.size} employees...`);
+
+        // Use a loop to ensure each employee's attendance is wiped before moving to the next
+        for (const id of selectedEmployeeIds) {
+            // Reusing your deep-clean logic that searches for 'empId'
+            await deleteEmployeeFromDB(id);
+            
+            // Clear local attendance memory if it exists to prevent "ghost" dots
+            if (typeof allAttendance !== 'undefined') {
+                allAttendance = allAttendance.filter(rec => rec.empId !== id);
+            }
+        }
+
         // --- UI SYNC BLOCK ---
         selectedEmployeeIds.clear();
-        bulkEmployeeCache = []; // Clear the global cache
+        bulkEmployeeCache = []; 
         
         // Refresh all components
         await renderEmployees(); 
         await populateDepartmentFilter();
-        await populateAttendanceEmployees(); // Refreshes Attendance Search
+        await populateAttendanceEmployees(); 
         await populateDeptDropdown('deptSummaryDept');
         await populateDeptDropdown('yearlySummaryDept');
         
-        // Reset the Select All checkbox if it exists
+        // Reset the Select All checkbox
         const selectAllHeader = document.getElementById('selectAllHeader');
         if (selectAllHeader) selectAllHeader.checked = false;
 
-        alert("Selected employees removed successfully.");
+        // Force calendar refresh to show it's empty
+        renderCalendar();
+
+        alert("Selected employees and all their history removed successfully.");
     } catch (e) {
         console.error("Error deleting selected employees:", e);
         alert("Error deleting employees. Check console for details.");
@@ -1837,36 +1910,37 @@ async function deleteSelectedEmployees() {
 }
 
 async function deleteAllEmployees() {
-    if (!confirm("⚠️ DANGER: This will remove EVERY employee from the database. This cannot be undone. Proceed?")) return;
+    if (!confirm("⚠️ DANGER: This will remove EVERY employee AND their attendance history. Proceed?")) return;
     
-    // Fetch fresh list to ensure we delete everything currently in DB
     const all = await getEmployeesFromDB();
     if (all.length === 0) return alert("No employees found to delete.");
 
-    const batch = db.batch();
-    all.forEach(emp => {
-        batch.delete(db.collection(EMPLOYEES_COLLECTION).doc(emp.id));
-    });
-
     try {
-        await batch.commit();
-        
+        // Loop through every employee and trigger the deep clean logic
+        for (const emp of all) {
+            await deleteEmployeeFromDB(emp.id);
+        }
+
         // --- UI SYNC BLOCK ---
-        bulkEmployeeCache = []; // Clear the global cache
+        bulkEmployeeCache = []; 
         selectedEmployeeIds.clear();
         
-        // Refresh all components to empty states
+        // Completely wipe local attendance memory
+        if (typeof allAttendance !== 'undefined') allAttendance = [];
+        
         await renderEmployees();
         await populateDepartmentFilter();
         await populateAttendanceEmployees();
         await populateDeptDropdown('deptSummaryDept');
         await populateDeptDropdown('yearlySummaryDept');
 
-        // Reset the Select All checkbox
         const selectAllHeader = document.getElementById('selectAllHeader');
         if (selectAllHeader) selectAllHeader.checked = false;
 
-        alert("All employee records have been cleared.");
+        // Reset the calendar to a blank state
+        renderCalendar();
+
+        alert("Database fully cleared (Employees & Attendance).");
     } catch (e) {
         console.error("Error clearing database:", e);
         alert("Failed to clear database.");
@@ -1986,15 +2060,36 @@ async function editEmployee(id){
   new bootstrap.Modal(employeeModal).show();
 }
 
-async function deleteEmployee(id){
-  if(!confirm(`Delete employee ${id}? This will NOT delete attendance data.`)) return;
-  
-  if (await deleteEmployeeFromDB(id)) {
-      await renderEmployees();
-      await populateDepartmentFilter();
-      await populateDeptDropdown('deptSummaryDept');
-      await populateDeptDropdown('yearlySummaryDept');
-  }
+async function deleteEmployee(id) {
+    if(!confirm(`PERMANENT ACTION: Delete Employee ${id} and all history?`)) return;
+    
+    const success = await deleteEmployeeFromDB(id);
+    
+    if (success) {
+        // --- THE MISSING STEP: CLEAR LOCAL DATA ---
+        // Search your code for the variable that stores ALL attendance data.
+        // It's likely called 'allAttendance' or similar. 
+        if (typeof allAttendance !== 'undefined') {
+            allAttendance = allAttendance.filter(rec => rec.empId !== id);
+            console.log("Local memory cleared for ID:", id);
+        }
+
+        // Reset UI Selection
+        const empSelect = document.getElementById('attendanceEmployee');
+        if (empSelect.value === id) {
+            empSelect.value = "";
+            if (typeof selectedDates !== 'undefined') selectedDates = [];
+        }
+
+        // Refresh Lists and UI
+        await renderEmployees();
+        
+        // This is crucial: Redraw the calendar while the ID is empty 
+        // to force the UI to reset its internal state.
+        renderCalendar(); 
+        
+        alert("Employee and history fully wiped from Database and Memory.");
+    }
 }
 
 function clearForm(){
@@ -2304,38 +2399,59 @@ function toggleDate(cell,date){
   else{ selectedDates.push(date); cell.classList.add('selected'); }
 }
 
-async function markSelected(status,leaveType=null){
-  const empId=document.getElementById('attendanceEmployee').value;
-  if(!empId||selectedDates.length===0){ alert('Select an employee and dates'); return; }
+async function markSelected(status, leaveType = null) {
+  const empId = document.getElementById('attendanceEmployee').value;
+  
+  // Validation: Ensure employee is selected and dates are picked
+  if (!empId || selectedDates.length === 0) { 
+    alert('Please select an employee and at least one date on the calendar.'); 
+    return; 
+  }
   
   const batch = db.batch();
   
-  selectedDates.forEach(date=>{
+  selectedDates.forEach(date => {
     const recordKey = `${empId}_${date}`;
     
-    let record={
-        empId,
-        date,
-        status,
-        leaveType: leaveType,
+    // Construct the record
+    let record = {
+        empId: empId,
+        date: date,
+        status: status, // 'PRESENT' or 'LEAVE'
+        leaveType: leaveType, // Will be 'PL', 'CL', 'SL', 'FL', or 'COFF'
         customShift: null,
         docId: recordKey
     }; 
     
-    // If marking PRESENT or LEAVE, remove customShift property
-    if (status !== 'SHIFT_OVERRIDE') {
-        delete record.customShift;
+    // Logic: If marking as PRESENT, ensure leaveType is null.
+    // Our updated getMonthlyReportData will now automatically 
+    // calculate NSA for these manual 'PRESENT' entries on weekends.
+    if (status === 'PRESENT') {
+        record.leaveType = null;
+        delete record.customShift; 
     }
     
+    // Logic: If status is LEAVE, ensure customShift is removed
+    if (status === 'LEAVE') {
+        delete record.customShift;
+    }
+
+    // Set the document in the batch
     batch.set(db.collection(ATTENDANCE_COLLECTION).doc(recordKey), record);
   });
 
   try {
       await batch.commit();
-      renderCalendar();
-  } catch(e) {
+      
+      // Reset selection and refresh UI
+      selectedDates = []; 
+      await renderCalendar();
+      
+      // Provide feedback if many dates were marked
+      console.log(`Successfully marked ${status} for ${empId}`);
+  } catch (e) {
       console.error("Batch save failed:", e);
-      alert('Failed to mark attendance for selected dates.');
+      alert('Failed to update attendance. Please check your connection.');
   }
 }
 
@@ -2461,60 +2577,79 @@ function hideDeptSummary() {
  *********************/
 async function getMonthlyReportData(emp, month) {
     const [year, m] = month.split('-').map(Number);
+    const daysInMonth = new Date(year, m, 0).getDate();
     
-    // 1. Fetch dependencies in parallel to save time
-    const [allWorkingDaysInMonth, nsaRules, records] = await Promise.all([
-        getWorkingDays(year, m),
+    const [nsaRules, records, holidays] = await Promise.all([
         getNsaRulesFromDB(),
-        getAttendanceFromDB(emp.id, month)
+        getAttendanceFromDB(emp.id, month),
+        getHolidaysFromDB()
     ]);
 
-    // Determine valid working days for this employee
-    const validWorkingDays = allWorkingDaysInMonth.filter(date => date >= emp.joinDate);
-    
-    let leaves = { PL:0, CL:0, SL:0, FL:0 };
+    const holidayDates = holidays.map(h => h.date);
+    let leaves = { PL: 0, CL: 0, SL: 0, FL: 0, COFF: 0 }; 
+    let fixedHolidaysCount = 0; 
     let finalPresentDays = 0;
     let totalNsaAmount = 0;
+    
+    // Ensure all shift keys are initialized to 0
     let shiftBreakdown = { MORNING_8_5: 0, NIGHT_6_3: 0, NIGHT_9_30_6_30: 0 }; 
 
-    // 2. Optimization: Convert records array to an Object for instant lookup
     const recordMap = {};
-    records.forEach(r => {
-        recordMap[r.docId] = r;
-    });
+    records.forEach(r => { recordMap[r.date] = r; });
 
-    // 3. Process all days. 
-    // We use a regular loop but removed 'await' from inside to make it instant.
-    for (const date of validWorkingDays) {
-        const recordKey = `${emp.id}_${date}`;
-        const record = recordMap[recordKey];
-        
-        if (record && record.status === 'LEAVE' && record.leaveType) {
-            if (leaves.hasOwnProperty(record.leaveType)) {
-                leaves[record.leaveType]++; 
-            }
-        } else {
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        if (dateStr < emp.joinDate) continue;
+
+        const dateObj = new Date(year, m - 1, d);
+        const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+        const isHoliday = holidayDates.includes(dateStr);
+        const record = recordMap[dateStr];
+
+        // LOGIC: PRIORITIZE SHIFT OVERRIDES
+        if (record && record.status === 'PRESENT') {
             finalPresentDays++;
             
-            // If getDailyNsaInfo was async, we fetch it via a non-blocking helper
-            // Note: If you have specific shift logic in getDailyNsaInfo, 
-            // ensure it is updated to use cached nsaRules.
-            const nsaInfo = calculateDailyNsaLocally(emp, date, record, nsaRules);
+            // PRIORITY: 1. Custom Shift from Record, 2. Default Shift from Employee Profile
+            const effectiveShiftKey = record.customShift || emp.shift;
             
-            totalNsaAmount += nsaInfo.amount;
-            const shiftKey = nsaInfo.shift;
-            if (shiftBreakdown.hasOwnProperty(shiftKey)) {
-                shiftBreakdown[shiftKey]++;
+            const nsaAmount = nsaRules[effectiveShiftKey]?.amount || 0;
+            totalNsaAmount += nsaAmount;
+
+            // Increment the specific shift in breakdown
+            if (shiftBreakdown.hasOwnProperty(effectiveShiftKey)) {
+                shiftBreakdown[effectiveShiftKey]++;
             }
+        } 
+        // Default Presence for Weekdays
+        else if (!isWeekend && !isHoliday && !record) {
+            finalPresentDays++;
+            const effectiveShiftKey = emp.shift; // Default shift
+            
+            const nsaAmount = nsaRules[effectiveShiftKey]?.amount || 0;
+            totalNsaAmount += nsaAmount;
+
+            if (shiftBreakdown.hasOwnProperty(effectiveShiftKey)) {
+                shiftBreakdown[effectiveShiftKey]++;
+            }
+        }
+        else if (record && record.status === 'LEAVE') {
+            if (leaves.hasOwnProperty(record.leaveType)) {
+                leaves[record.leaveType]++;
+            }
+        }
+        else if (isHoliday) {
+            fixedHolidaysCount++;
         }
     }
 
     return { 
         leaves, 
+        fixedHolidaysCount, 
         finalPresentDays, 
         totalNsaAmount, 
-        shiftBreakdown,
-        validWorkingDaysCount: validWorkingDays.length
+        shiftBreakdown, 
+        validWorkingDaysCount: daysInMonth 
     };
 }
 
@@ -2531,65 +2666,104 @@ function calculateDailyNsaLocally(emp, date, record, nsaRules) {
 }
 
 
-async function renderEmployeeSummary(){
-  const empId = document.getElementById('summaryEmployee').value; 
+async function renderEmployeeSummary() {
+  const empId = document.getElementById('summaryEmployee').value;
   const month = summaryMonth.value;
-  if(!empId || !month){ alert('Select an employee and month'); return; }
+  if (!empId || !month) {
+    alert('Select an employee and month');
+    return;
+  }
 
   const emp = await getEmployeeById(empId);
-  if (!emp) { alert('Employee not found or inactive.'); return; }
-  
-  // Display loading state
+  if (!emp) {
+    alert('Employee not found or inactive.');
+    return;
+  }
+
   document.getElementById('employeeSummary').innerHTML = '<div class="alert alert-warning text-center">Generating summary...</div>';
 
-
   const report = await getMonthlyReportData(emp, month);
-  const { leaves, finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount } = report;
+  const {
+    leaves,
+    fixedHolidaysCount,
+    finalPresentDays,
+    totalNsaAmount,
+    shiftBreakdown,
+    validWorkingDaysCount
+  } = report;
+
   const nsaRules = await getNsaRulesFromDB();
 
-    // 3. Generate Breakdown HTML
-    let breakdownHtml = '<p class="fw-bold">Present Days Breakdown by Shift:</p><ul class="list-unstyled">';
-    let breakdownCount = 0;
-    
-    SHIFT_KEYS.forEach(key => {
-        const days = shiftBreakdown[key] || 0;
-        if (days > 0) {
-            const shiftName = nsaRules[key]?.name || key;
-            const nsaPerDay = nsaRules[key]?.amount || 0;
-            const totalNsa = days * nsaPerDay;
-            
-            breakdownHtml += `
-                <li>
-                    <strong>${days} Day(s)</strong> in ${shiftName} 
-                    <small class="text-muted">(₹${nsaPerDay} / day)</small> 
-                    <span class="badge bg-primary float-end">NSA: ₹${totalNsa}</span>
-                </li>`;
-            breakdownCount++;
-        }
-    });
-    
-    if (breakdownCount === 0 && finalPresentDays > 0) {
-        const shiftName = nsaRules[emp.shift]?.name || emp.shift;
-        breakdownHtml += `<li><strong>${finalPresentDays} Day(s)</strong> in ${shiftName} (Zero NSA Default Shift)</li>`;
-    }
-    breakdownHtml += '</ul>';
+  // 1. Generate Accurate Shift Breakdown HTML
+  let breakdownHtml = '<p class="fw-bold">Present Days Breakdown by Shift:</p><ul class="list-unstyled">';
+  let breakdownCount = 0;
 
+  // We iterate through all keys present in the breakdown
+  Object.keys(shiftBreakdown).forEach(key => {
+    const days = shiftBreakdown[key] || 0;
+    if (days > 0) {
+      const shiftName = nsaRules[key]?.name || key;
+      const nsaPerDay = nsaRules[key]?.amount || 0;
+      const totalNsaForThisShift = days * nsaPerDay;
+
+      breakdownHtml += `
+                <li class="mb-2 p-2 border-bottom shadow-sm bg-white rounded">
+                    <strong>${days} Day(s)</strong> in <span class="text-primary">${shiftName}</span>
+                    <small class="text-muted ms-2">(Rate: ₹${nsaPerDay})</small> 
+                    <span class="badge bg-success float-end">NSA: ₹${totalNsaForThisShift}</span>
+                </li>`;
+      breakdownCount++;
+    }
+  });
+
+  if (breakdownCount === 0 && finalPresentDays > 0) {
+    breakdownHtml += `<li><span class="text-muted">No specific shift data recorded.</span></li>`;
+  }
+  breakdownHtml += '</ul>';
+
+  // 2. Render UI Cards
   document.getElementById('employeeSummary').innerHTML = `
     <div class="row g-3">
-        <div class="col-md-4"><div class="card p-3 bg-light">Total Valid Working Days<br><strong>${validWorkingDaysCount}</strong></div></div>
-        <div class="col-md-4"><div class="card p-3 bg-success text-white">Actual Present Days<br><strong>${finalPresentDays}</strong></div></div>
-        <div class="col-md-4"><div class="card p-3 bg-primary text-white">Leaves (PL/CL/SL/FL)<br><strong>${leaves.PL}/${leaves.CL}/${leaves.SL}/${leaves.FL}</strong></div></div>
-        <div class="col-md-12"><div class="card p-3 bg-info text-white">Final NSA Amount Earned<br><strong>₹${totalNsaAmount}</strong></div></div>
+        <div class="col-md-2">
+            <div class="card p-3 bg-light text-center h-100 border-0 shadow-sm">
+                <small class="text-muted fw-bold">Month Days</small><br><span class="fs-4">${validWorkingDaysCount}</span>
+            </div>
+        </div>
+        
+        <div class="col-md-2">
+            <div class="card p-3 bg-success text-white text-center h-100 border-0 shadow-sm">
+                <small class="fw-bold">Actual Present</small><br><span class="fs-4">${finalPresentDays}</span>
+            </div>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card p-3 bg-primary text-white text-center h-100 border-0 shadow-sm">
+                <small class="fw-bold">Leaves (PL / CL / SL / FL / COFF)</small><br>
+                <span class="fs-4">${leaves.PL} / ${leaves.CL} / ${leaves.SL} / ${leaves.FL} / ${leaves.COFF}</span>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 bg-warning text-dark text-center h-100 border-0 shadow-sm">
+                <small class="fw-bold">Fixed Holidays (FH)</small><br><span class="fs-4">${fixedHolidaysCount}</span>
+            </div>
+        </div>
         
         <div class="col-md-12">
-            <div class="card p-3 shift-breakdown-card">
-                <h5 class="card-title text-info">Detailed Shift NSA Breakdown</h5>
+            <div class="card p-3 bg-dark text-white text-center border-0 shadow">
+                <span class="fs-5">Final Combined NSA Amount: <strong class="text-warning">₹${totalNsaAmount}</strong></span>
+            </div>
+        </div>
+        
+        <div class="col-md-12">
+            <div class="card p-4 bg-light border-0 shadow-sm">
+                <h5 class="card-title text-primary mb-3"><i class="bi bi-clock-history"></i> Detailed Shift NSA Breakdown</h5>
                 ${breakdownHtml}
             </div>
         </div>
     </div>`;
-    
-    renderSummaryChart(finalPresentDays, leaves);
+
+  renderSummaryChart(finalPresentDays, leaves);
 
   deptSummaryPage = 1;
   await renderDepartmentSummary(month);
@@ -2737,22 +2911,31 @@ async function renderDeptMonthlySummary() {
 
 async function renderDeptMonthlySummaryPage(dept, month) {
   const tbody = document.querySelector('#deptMonthlySummary tbody');
-  tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Generating breakdown...</td></tr>';
+  // Updated colspan to 12 to account for COFF and FH
+  tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Generating breakdown...</td></tr>';
 
   const allEmployees = await getEmployeesFromDB();
   const reportData = [];
 
   const filteredEmployees = allEmployees
-    .filter(emp => emp.department === dept && emp.status==='Active');
+    .filter(emp => emp.department === dept && emp.status === 'Active');
   
   for (const emp of filteredEmployees) {
       const report = await getMonthlyReportData(emp, month);
-      const { leaves, finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount } = report;
+      // Destructure fixedHolidaysCount from the updated report engine
+      const { leaves, fixedHolidaysCount, finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount } = report;
 
       if (validWorkingDaysCount === 0) continue; 
 
-      if(finalPresentDays > 0 || Object.values(leaves).some(l => l > 0)) {
-          reportData.push({ emp, finalPresentDays, leaves, nsaAmount: totalNsaAmount, breakdown: shiftBreakdown });
+      if(finalPresentDays > 0 || Object.values(leaves).some(l => l > 0) || fixedHolidaysCount > 0) {
+          reportData.push({ 
+            emp, 
+            finalPresentDays, 
+            leaves, 
+            fixedHolidaysCount, 
+            nsaAmount: totalNsaAmount, 
+            breakdown: shiftBreakdown 
+          });
       }
   }
 
@@ -2764,7 +2947,7 @@ async function renderDeptMonthlySummaryPage(dept, month) {
   tbody.innerHTML = '';
 
   if (reportData.length === 0) {
-       tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No attendance data or NSA recorded for this department this month.</td></tr>';
+       tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">No attendance data or NSA recorded for this department this month.</td></tr>';
        document.getElementById('deptMonthlySummaryPagination').innerHTML = '';
        document.getElementById('backDeptSummaryBtn').classList.remove('d-none');
        return;
@@ -2778,11 +2961,11 @@ async function renderDeptMonthlySummaryPage(dept, month) {
       <td>${item.breakdown.MORNING_8_5 || 0}</td>
       <td>${item.breakdown.NIGHT_6_3 || 0}</td>
       <td>${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
-      <td>${item.leaves.PL}</td>
-      <td>${item.leaves.CL}</td>
-      <td>${item.leaves.SL}</td>
-      <td>${item.leaves.FL}</td>
-      <td>₹${item.nsaAmount}</td>
+      <td>${item.leaves.PL || 0}</td>
+      <td>${item.leaves.CL || 0}</td>
+      <td>${item.leaves.SL || 0}</td>
+      <td>${item.leaves.FL || 0}</td>
+      <td>${item.leaves.COFF || 0}</td> <td>${item.fixedHolidaysCount || 0}</td> <td>₹${item.nsaAmount}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -2804,15 +2987,11 @@ async function renderDeptMonthlySummaryPage(dept, month) {
  *********************/
 async function getYearlyReportData(year, deptFilter) {
     const allEmployees = await getEmployeesFromDB();
-    
-    // 1. Safety Check: If no employees, stop here and return empty list
     if (!allEmployees || allEmployees.length === 0) return [];
 
-    // 2. De-duplication using a Map
+    // 1. De-duplication and Filtering
     const uniqueMap = new Map();
-    allEmployees.forEach(emp => {
-        if (emp.id) uniqueMap.set(emp.id, emp);
-    });
+    allEmployees.forEach(emp => { if (emp.id) uniqueMap.set(emp.id, emp); });
 
     const activeEmployees = Array.from(uniqueMap.values()).filter(
         emp => emp.status === 'Active' && (!deptFilter || emp.department === deptFilter)
@@ -2820,8 +2999,10 @@ async function getYearlyReportData(year, deptFilter) {
 
     if (activeEmployees.length === 0) return [];
     
-    const allYearWorkingDaysByMonth = await getAllWorkingDaysInYear(Number(year)); 
-    const allAttendance = await getAttendanceFromDB();
+    // 2. Load Reference Data
+    const holidays = await getHolidaysFromDB();
+    const holidayDates = holidays.map(h => h.date);
+    const allAttendance = await getAttendanceFromDB(); // Optimization: Get all records for the year once
     const nsaRules = await getNsaRulesFromDB();
 
     const getRecord = (empId, date) => {
@@ -2829,7 +3010,6 @@ async function getYearlyReportData(year, deptFilter) {
         return allAttendance.find(r => r.docId === recordKey);
     }
 
-    const allMonths = Object.keys(allYearWorkingDaysByMonth).sort();
     const reportData = [];
 
     for (const emp of activeEmployees) {
@@ -2843,46 +3023,80 @@ async function getYearlyReportData(year, deptFilter) {
         };
         
         let yearlyPresentDays = 0;
-        let yearlyLeaves = { PL:0, CL:0, SL:0, FL:0 };
+        let yearlyLeaves = { PL: 0, CL: 0, SL: 0, FL: 0, COFF: 0 }; // Added COFF
+        let yearlyFH = 0; // Added FH counter
         let yearlyNSA = 0;
         let yearlyShiftBreakdown = { MORNING_8_5: 0, NIGHT_6_3: 0, NIGHT_9_30_6_30: 0 }; 
 
-        for (const monthKey of allMonths) {
-            const allWorkingDaysInMonth = allYearWorkingDaysByMonth[monthKey];
-            const validWorkingDays = allWorkingDaysInMonth.filter(date => date >= emp.joinDate);
+        // Loop through 12 months
+        for (let m = 1; m <= 12; m++) {
+            const monthKey = `${year}-${String(m).padStart(2, '0')}`;
+            const daysInMonth = new Date(year, m, 0).getDate();
             
-            let leaves = { PL:0, CL:0, SL:0, FL:0 };
+            let leaves = { PL: 0, CL: 0, SL: 0, FL: 0, COFF: 0 }; // Added COFF
             let presentDays = 0;
             let nsa = 0;
+            let fhCount = 0; // Fixed Holiday counter for the month
             let shiftBreakdown = { MORNING_8_5: 0, NIGHT_6_3: 0, NIGHT_9_30_6_30: 0 };
 
-            for (const date of validWorkingDays) {
-                const record = getRecord(emp.id, date);
-                if (record && record.status === 'LEAVE' && record.leaveType) {
-                    leaves[record.leaveType] = (leaves[record.leaveType] || 0) + 1;
-                    yearlyLeaves[record.leaveType] += 1;
-                } else if (!record || record.status === 'PRESENT') {
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${monthKey}-${String(d).padStart(2, '0')}`;
+                
+                // Skip if before join date
+                if (dateStr < emp.joinDate) continue;
+
+                const dateObj = new Date(year, m - 1, d);
+                const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+                const isHoliday = holidayDates.includes(dateStr);
+                const record = getRecord(emp.id, dateStr);
+
+                // LOGIC 1: Manual Presence (Weekends included) OR Default Weekday Presence
+                if ((record && record.status === 'PRESENT') || (!isWeekend && !isHoliday && !record)) {
                     presentDays++;
-                    const effectiveShiftKey = record && record.customShift ? record.customShift : emp.shift;
+                    // Priority: Custom Shift Override > Default Shift
+                    const effectiveShiftKey = (record && record.customShift) ? record.customShift : emp.shift;
                     const nsaPerDay = nsaRules[effectiveShiftKey]?.amount || 0;
+                    
                     nsa += nsaPerDay;
                     if (shiftBreakdown.hasOwnProperty(effectiveShiftKey)) {
                         shiftBreakdown[effectiveShiftKey]++;
                         yearlyShiftBreakdown[effectiveShiftKey]++; 
                     }
+                } 
+                // LOGIC 2: Leaves (Including COFF)
+                else if (record && record.status === 'LEAVE' && record.leaveType) {
+                    if (leaves.hasOwnProperty(record.leaveType)) {
+                        leaves[record.leaveType]++;
+                        yearlyLeaves[record.leaveType]++;
+                    }
+                }
+                // LOGIC 3: Fixed Holidays (FH)
+                else if (isHoliday) {
+                    fhCount++;
+                    yearlyFH++;
                 }
             }
+            
             yearlyPresentDays += presentDays;
             yearlyNSA += nsa;
-            empReport.monthly[monthKey] = { presentDays, leaves, nsa, breakdown: shiftBreakdown };
+            
+            empReport.monthly[monthKey] = { 
+                presentDays, 
+                leaves, 
+                nsa, 
+                fh: fhCount, // Added FH to monthly breakdown
+                breakdown: shiftBreakdown 
+            };
         }
 
         empReport.presentDays = yearlyPresentDays;
         empReport.leaves = yearlyLeaves;
+        empReport.fh = yearlyFH; // Added FH to yearly total
         empReport.nsa = yearlyNSA;
         empReport.yearlyBreakdown = yearlyShiftBreakdown; 
 
-        if (empReport.presentDays > 0 || Object.values(empReport.leaves).some(l => l > 0)) {
+        // Only push if there is some activity
+        if (empReport.presentDays > 0 || Object.values(empReport.leaves).some(l > 0) || empReport.fh > 0) {
             reportData.push(empReport);
         }
     }
@@ -2963,144 +3177,114 @@ async function renderMonthlyBreakdown(reportData, year, deptFilter) {
     body.innerHTML = '';
     footer.innerHTML = '';
 
-    // --- 1. Construct Header ---
-    const headerRow1 = document.createElement('tr');
-    const headerRow2 = document.createElement('tr');
-
-    headerRow1.innerHTML += `<th rowspan="2">Employee</th><th rowspan="2">Dept</th>`;
-    headerRow2.innerHTML += ``; 
-
     const allMonths = Object.keys(reportData[0].monthly).sort(); 
+
+    // --- SPEED FIX 1: Fetch all working days for the year upfront ---
+    const workingDaysCache = {};
+    await Promise.all(allMonths.map(async (monthKey) => {
+        const m = parseInt(monthKey.split('-')[1]);
+        workingDaysCache[monthKey] = await getWorkingDays(Number(year), m);
+    }));
     
     const shiftCodes = {
         MORNING_8_5: 'SC-M',
-        NIGHT_6_3: 'SC-N6-3',
-        NIGHT_9_30_6_30: 'SC-N9-6'
+        NIGHT_6_3: 'SC-N1',
+        NIGHT_9_30_6_30: 'SC-N2'
     };
 
-    for (const monthKey of allMonths) {
-        const monthName = MONTH_NAMES[parseInt(monthKey) - 1];
+    // --- 1. Construct Header ---
+    const headerRow1 = document.createElement('tr');
+    const headerRow2 = document.createElement('tr');
+    headerRow1.innerHTML += `<th rowspan="2">Employee</th><th rowspan="2">Dept</th>`;
 
-        // 5 columns for breakdown + 4 for leaves + 1 for NSA = 10 columns
-        headerRow1.innerHTML += `<th colspan="10" class="text-center">${monthName}</th>`;
-        
+    for (const monthKey of allMonths) {
+        const monthName = MONTH_NAMES[parseInt(monthKey.split('-')[1]) - 1];
+        headerRow1.innerHTML += `<th colspan="12" class="text-center bg-dark text-white">${monthName}</th>`;
         headerRow2.innerHTML += `
-            <th>P(T)</th>
-            <th>${shiftCodes.MORNING_8_5}</th>
-            <th>${shiftCodes.NIGHT_6_3}</th>
-            <th>${shiftCodes.NIGHT_9_30_6_30}</th>
+            <th>P(T)</th><th>${shiftCodes.MORNING_8_5}</th><th>${shiftCodes.NIGHT_6_3}</th><th>${shiftCodes.NIGHT_9_30_6_30}</th>
             <th>PL</th><th>CL</th><th>SL</th><th>FL</th>
-            <th>NSA(₹)</th>
-            <th>W Days</th>
-            `;
+            <th class="table-info text-dark">COFF</th> 
+            <th class="table-warning text-dark">FH</th>
+            <th>NSA(₹)</th><th>W Days</th>`;
     }
 
     headerRow1.innerHTML += `<th rowspan="2">Yearly P</th><th rowspan="2">Yearly L</th><th rowspan="2">Yearly NSA (₹)</th>`;
-
     header.appendChild(headerRow1);
     header.appendChild(headerRow2);
 
+    // --- 2. Construct Body (Using Fragment for speed) ---
+    const bodyFragment = document.createDocumentFragment();
 
-    // --- 2. Construct Body (Data Rows) ---
     for (const item of reportData) {
-        const totalLeaves = item.leaves.PL + item.leaves.CL + item.leaves.SL + item.leaves.FL;
+        const totalLeaves = item.leaves.PL + item.leaves.CL + item.leaves.SL + item.leaves.FL + item.leaves.COFF;
         const tr = document.createElement('tr');
-        tr.innerHTML += `<td>${item.name}</td><td>${item.department}</td>`;
+        
+        // Build row HTML as a string first (faster than multiple appends)
+        let rowHtml = `<td><strong>${item.name}</strong></td><td><small>${item.department}</small></td>`;
 
         for (const monthKey of allMonths) {
             const data = item.monthly[monthKey];
-            
-            // Get valid working days for the current employee/month
-            const workingDays = await getWorkingDays(Number(year), Number(monthKey));
-            const empWorkingDays = workingDays.filter(date => date >= item.joinDate);
+            const monthWorkingDays = workingDaysCache[monthKey] || [];
+            const empWorkingDaysCount = monthWorkingDays.filter(date => date >= item.joinDate).length;
 
-
-            tr.innerHTML += `
+            rowHtml += `
                 <td>${data.presentDays}</td>
-                <td>${data.breakdown.MORNING_8_5}</td>
-                <td>${data.breakdown.NIGHT_6_3}</td>
-                <td>${data.breakdown.NIGHT_9_30_6_30}</td>
-                <td>${data.leaves.PL}</td>
-                <td>${data.leaves.CL}</td>
-                <td>${data.leaves.SL}</td>
-                <td>${data.leaves.FL}</td>
-                <td>₹${data.nsa}</td>
-                <td>${empWorkingDays.length}</td>
-            `;
+                <td>${data.breakdown.MORNING_8_5 || 0}</td>
+                <td>${data.breakdown.NIGHT_6_3 || 0}</td>
+                <td>${data.breakdown.NIGHT_9_30_6_30 || 0}</td>
+                <td>${data.leaves.PL}</td><td>${data.leaves.CL}</td><td>${data.leaves.SL}</td><td>${data.leaves.FL}</td>
+                <td class="table-info">${data.leaves.COFF}</td>
+                <td class="table-warning">${data.fh}</td>
+                <td class="fw-bold">₹${data.nsa}</td>
+                <td class="text-muted small">${empWorkingDaysCount}</td>`;
         }
 
-        tr.innerHTML += `
-            <td class="table-info">${item.presentDays}</td>
-            <td class="table-danger">${totalLeaves}</td>
-            <td class="table-warning">₹${item.nsa}</td>
-        `;
+        rowHtml += `
+            <td class="table-info fw-bold">${item.presentDays}</td>
+            <td class="table-danger fw-bold">${totalLeaves}</td>
+            <td class="table-warning fw-bold">₹${item.nsa.toLocaleString()}</td>`;
 
-        body.appendChild(tr);
+        tr.innerHTML = rowHtml;
+        bodyFragment.appendChild(tr);
     }
+    body.appendChild(bodyFragment);
 
     // --- 3. Construct Footer (Grand Totals) ---
     const totalRow = document.createElement('tr');
-    totalRow.className = 'total-row';
-    
-    totalRow.innerHTML += `<td colspan="2">GRAND TOTAL (All Employees)</td>`;
+    totalRow.className = 'table-dark fw-bold';
+    totalRow.innerHTML += `<td colspan="2">GRAND TOTAL</td>`;
 
     let grandTotalP = 0;
     let grandTotalL = 0;
     let grandTotalNSA = 0;
 
     for (const monthKey of allMonths) {
-        let monthTotalP = 0;
-        let monthTotalL = 0;
-        let monthTotalNSA = 0;
-        let monthTotalSCM = 0;
-        let monthTotalSCN1 = 0;
-        let monthTotalSCN2 = 0;
-        let monthTotalPL = 0;
-        let monthTotalCL = 0;
-        let monthTotalSL = 0;
-        let monthTotalFL = 0;
-        let monthTotalW = (await getWorkingDays(Number(year), Number(monthKey))).length;
-
+        let mT = { p:0, scm:0, scn1:0, scn2:0, pl:0, cl:0, sl:0, fl:0, coff:0, fh:0, nsa:0 };
+        const monthWorkingDaysCount = (workingDaysCache[monthKey] || []).length;
 
         reportData.forEach(item => {
             const data = item.monthly[monthKey];
-            monthTotalP += data.presentDays;
-            monthTotalL += data.leaves.PL + data.leaves.CL + data.leaves.SL + data.leaves.FL;
-            monthTotalNSA += data.nsa;
-            monthTotalSCM += data.breakdown.MORNING_8_5;
-            monthTotalSCN1 += data.breakdown.NIGHT_6_3;
-            monthTotalSCN2 += data.breakdown.NIGHT_9_30_6_30;
-            monthTotalPL += data.leaves.PL;
-            monthTotalCL += data.leaves.CL;
-            monthTotalSL += data.leaves.SL;
-            monthTotalFL += data.leaves.FL;
+            mT.p += data.presentDays;
+            mT.scm += data.breakdown.MORNING_8_5 || 0;
+            mT.scn1 += data.breakdown.NIGHT_6_3 || 0;
+            mT.scn2 += data.breakdown.NIGHT_9_30_6_30 || 0;
+            mT.pl += data.leaves.PL; mT.cl += data.leaves.CL; mT.sl += data.leaves.SL; mT.fl += data.leaves.FL;
+            mT.coff += data.leaves.COFF; mT.fh += data.fh; mT.nsa += data.nsa;
         });
         
-        grandTotalP += monthTotalP;
-        grandTotalL += monthTotalL;
-        grandTotalNSA += monthTotalNSA;
-
+        grandTotalP += mT.p;
+        grandTotalL += (mT.pl + mT.cl + mT.sl + mT.fl + mT.coff);
+        grandTotalNSA += mT.nsa;
 
         totalRow.innerHTML += `
-            <td>${monthTotalP}</td>
-            <td>${monthTotalSCM}</td>
-            <td>${monthTotalSCN1}</td>
-            <td>${monthTotalSCN2}</td>
-            <td>${monthTotalPL}</td>
-            <td>${monthTotalCL}</td>
-            <td>${monthTotalSL}</td>
-            <td>${monthTotalFL}</td>
-            <td>₹${monthTotalNSA}</td>
-            <td>${monthTotalW}</td>
-        `;
+            <td>${mT.p}</td><td>${mT.scm}</td><td>${mT.scn1}</td><td>${mT.scn2}</td>
+            <td>${mT.pl}</td><td>${mT.cl}</td><td>${mT.sl}</td><td>${mT.fl}</td>
+            <td>${mT.coff}</td><td>${mT.fh}</td><td>₹${mT.nsa}</td>
+            <td>${monthWorkingDaysCount}</td>`;
     }
 
     totalRow.innerHTML += `
-        <td class="table-info">${grandTotalP}</td>
-        <td class="table-danger">${grandTotalL}</td>
-        <td class="table-warning">₹${grandTotalNSA}</td>
-    `;
-
+        <td>${grandTotalP}</td><td>${grandTotalL}</td><td>₹${grandTotalNSA.toLocaleString()}</td>`;
 
     footer.appendChild(totalRow);
 }
@@ -3331,13 +3515,43 @@ function exportYearlySummary() {
   const year = document.getElementById('yearlySummaryYear').value;
   const dept = document.getElementById('yearlySummaryDept').value || 'All';
   
-  if (!table || table.querySelector('tbody').children.length === 0 || table.querySelector('tbody td')?.textContent.includes('Select a year')) {
-    alert('No data to export. Generate the summary first.');
+  // Validation to ensure data exists before export
+  if (!table || 
+      table.querySelector('tbody').children.length === 0 || 
+      (table.querySelector('tbody td') && table.querySelector('tbody td').textContent.includes('Select a year')) ||
+      (table.querySelector('tbody td') && table.querySelector('tbody td').textContent.includes('Calculating'))) {
+    alert('No data to export. Please generate the yearly summary first.');
     return;
   }
   
-  const wb = XLSX.utils.table_to_book(table, { sheet: `${dept}_${year}_Summary` });
-  XLSX.writeFile(wb, `${dept}_${year}_Yearly_Summary.xlsx`);
+  // Clean the sheet name (Excel sheet names cannot exceed 31 characters or contain certain symbols)
+  let safeSheetName = `${dept.substring(0, 10)}_${year}_Summary`.replace(/[\\?*:[\]/]/g, "");
+
+  // Convert the HTML table to an Excel Workbook
+  // This automatically includes the new COFF and FH columns we added to the UI
+  const wb = XLSX.utils.table_to_book(table, { 
+    sheet: safeSheetName,
+    raw: true // Ensures numbers like NSA totals are handled correctly
+  });
+
+  // Set column widths for better readability in the exported file
+  const ws = wb.Sheets[safeSheetName];
+  const wscols = [
+    {wch: 25}, // Employee Name
+    {wch: 10}, // Present
+    {wch: 6},  // PL
+    {wch: 6},  // CL
+    {wch: 6},  // SL
+    {wch: 6},  // FL
+    {wch: 8},  // COFF (New)
+    {wch: 8},  // FH (New)
+    {wch: 15}, // Total NSA
+    {wch: 12}  // Action
+  ];
+  ws['!cols'] = wscols;
+
+  // Final file generation
+  XLSX.writeFile(wb, `${dept}_Dept_${year}_Yearly_Attendance_Summary.xlsx`);
 }
 
 function exportMonthlyBreakdown() {
