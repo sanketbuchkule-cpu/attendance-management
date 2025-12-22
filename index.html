@@ -3590,47 +3590,63 @@ async function handleExcelUpload(event) {
 
   const reader = new FileReader();
   reader.onload = async (e) => {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheetName = workbook.SheetNames[0]; 
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-    const employees = await getEmployeesFromDB();
-    let newEmployeesCount = 0;
-    const batch = db.batch();
-
-
-    jsonData.forEach(row => {
-      if(!row.ID || !row.Name || !row.Department || !row.JoinDate) return; 
-      
-      if (employees.some(e => e.id === row.ID)) return; 
-
-      const newEmployee = {
-        id: row.ID,
-        name: row.Name,
-        department: row.Department,
-        joinDate: row.JoinDate, 
-        shift: row.Shift || 'MORNING_8_5',
-        status: row.Status || 'Active'
-      };
-      
-      batch.set(db.collection(EMPLOYEES_COLLECTION).doc(newEmployee.id), newEmployee);
-      newEmployeesCount++;
-    });
-
     try {
-        await batch.commit();
-        await renderEmployees();
-        await populateDepartmentFilter();
-        await populateAttendanceEmployees();
-        await populateDeptDropdown('deptSummaryDept');
-        await populateDeptDropdown('yearlySummaryDept');
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0]; 
+      const worksheet = workbook.Sheets[sheetName];
+      // Added raw: false to ensure dates are read as strings from your Excel
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false });
 
-        alert(`${newEmployeesCount} unique employees uploaded successfully.`);
-    } catch (e) {
-        console.error("Excel upload batch failed:", e);
-        alert('Failed to upload employees via Excel.');
+      const employees = await getEmployeesFromDB();
+      let newEmployeesCount = 0;
+      const batch = db.batch();
+
+      jsonData.forEach(row => {
+        // Map Excel headers to local variables
+        const rawId = row.ID || row.id;
+        const name = row.Name || row.name;
+        const dept = row.Department || row.department;
+        const jDate = row.JoinDate || row.joinDate;
+
+        // Validation check
+        if(!rawId || !name || !dept || !jDate) return; 
+        
+        // Force ID to string so it matches your DB document ID format
+        const stringId = String(rawId).trim();
+
+        if (employees.some(e => e.id === stringId)) return; 
+
+        const newEmployee = {
+          id: stringId,
+          name: name,
+          department: dept,
+          joinDate: jDate, 
+          shift: row.Shift || row.shift || 'MORNING_8_5',
+          status: row.Status || row.status || 'Active'
+        };
+        
+        batch.set(db.collection(EMPLOYEES_COLLECTION).doc(newEmployee.id), newEmployee);
+        newEmployeesCount++;
+      });
+
+      if (newEmployeesCount === 0) {
+          return alert("No new employees to add. (Check for duplicates or empty fields).");
+      }
+
+      await batch.commit();
+      
+      // Refresh UI Components
+      await renderEmployees();
+      await populateDepartmentFilter();
+      await populateAttendanceEmployees();
+      await populateDeptDropdown('deptSummaryDept');
+      await populateDeptDropdown('yearlySummaryDept');
+
+      alert(`${newEmployeesCount} unique employees uploaded successfully.`);
+    } catch (err) {
+        console.error("Excel upload failed:", err);
+        alert('Failed to upload employees. Ensure you are logged in.');
     }
   };
   reader.readAsArrayBuffer(file);
