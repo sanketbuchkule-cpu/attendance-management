@@ -50,6 +50,7 @@
         text-align: center;
     }
 
+
     /* Status-Based Block Colors */
     .date-cell.bg-success { background-color: #d1e7dd !important; color: #0f5132 !important; border-color: #badbcc !important; }
     .date-cell.bg-danger { background-color: #f8d7da !important; color: #842029 !important; border-color: #f5c2c7 !important; }
@@ -142,11 +143,12 @@
         .d-flex.gap-2.flex-wrap > button, .d-flex.gap-2.flex-wrap > .dropdown { flex: 1 1 45%; }
         .modal-dialog { margin: 0.5rem; }
     }
+    
 </style>
 </head>
 <body>
 
-<div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; align-items:center; justify-content:center;">
+<div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:none; align-items:center; justify-content:center;">
     <div style="width:300px; padding:20px; border:1px solid #ddd; border-radius:8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         <h4 class="text-center mb-3">Attendance Login</h4>
         <input type="email" id="loginEmail" class="form-control mb-2" placeholder="Email">
@@ -1697,6 +1699,8 @@ let selectedEmployeeIds = new Set();
 
 async function renderEmployees(page = 1, filter = '') {
     const tbody = document.querySelector('#employeeTable tbody');
+    if (!tbody) return; // Safety check
+
     tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading...</td></tr>';
     
     // Clear cache to ensure we see fresh deletes
@@ -1706,9 +1710,9 @@ async function renderEmployees(page = 1, filter = '') {
     // Filter Logic
     const deptFilter = document.getElementById('departmentFilter')?.value || '';
     const filtered = allEmployees.filter(emp =>
-        (emp.name.toLowerCase().includes(filter.toLowerCase()) || emp.id.includes(filter)) &&
+        ((emp.name || "").toLowerCase().includes(filter.toLowerCase()) || (emp.id || "").includes(filter)) &&
         (!deptFilter || emp.department === deptFilter)
-    ).sort((a, b) => a.id.localeCompare(b.id));
+    ).sort((a, b) => (a.id || "").localeCompare(b.id || ""));
 
     // Pagination
     const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
@@ -1717,22 +1721,50 @@ async function renderEmployees(page = 1, filter = '') {
     const paginated = filtered.slice(start, start + ROWS_PER_PAGE);
 
     tbody.innerHTML = '';
+
+    if (paginated.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No employees found.</td></tr>';
+        return;
+    }
+
     paginated.forEach(emp => {
         const tr = document.createElement('tr');
         const isChecked = selectedEmployeeIds.has(emp.id) ? 'checked' : '';
         
+        // Define display variables for badges
+        const shiftDisplay = emp.shift || 'N/A';
+        const statusClass = emp.status === 'Active' ? 'bg-success' : 'bg-secondary';
+
         tr.innerHTML = `
-            <td><input type="checkbox" class="emp-checkbox" value="${emp.id}" ${isChecked} onchange="toggleEmpSelect('${emp.id}')"></td>
-            <td>${emp.id}</td>
+            <td>
+                <input type="checkbox" class="form-check-input emp-checkbox" 
+                    value="${emp.id}" ${isChecked} 
+                    onchange="toggleEmpSelect('${emp.id}')">
+            </td>
+            <td><strong>${emp.id}</strong></td>
             <td>${emp.name}</td>
-            <td>${emp.department}</td>
-            <td><span class="badge bg-info">${emp.shift}</span></td>
-            <td>${emp.status}</td>
+            <td><span class="badge bg-light text-dark border">${emp.department}</span></td>
+            <td><span class="badge bg-info text-dark">${shiftDisplay}</span></td>
+            <td><span class="badge ${statusClass}">${emp.status || 'Active'}</span></td>
             <td class="text-end">
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee('${emp.id}')">Delete</button>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-secondary" 
+                        onclick="viewEmployeeHistory('${emp.id}')" title="Attendance History">
+                        <i class="bi bi-clock-history"></i> History
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" 
+                        onclick="editEmployee('${emp.id}')" title="Edit Details">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" 
+                        onclick="deleteEmployee('${emp.id}')" title="Delete">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
             </td>`;
         tbody.appendChild(tr);
     });
+
     renderPagination(totalPages);
 }
 
