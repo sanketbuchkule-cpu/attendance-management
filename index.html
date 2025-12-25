@@ -10,6 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -207,6 +208,71 @@
       </div>
     </div>
   </div>
+</div>
+
+<div class="modal fade" id="individualYearlyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Individual Yearly Performance Audit</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Search Employee</label>
+                        <input type="text" id="individualSearchInput" class="form-control" placeholder="Type name or ID..." onkeyup="filterIndividualSearch()">
+                        <div id="individualSearchResults" class="list-group position-absolute w-100 z-3 shadow" style="display:none; max-height: 200px; overflow-y: auto;"></div>
+                        <input type="hidden" id="selectedIndividualId">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Select Year</label>
+                        <input type="number" id="individualYearInput" class="form-control" value="2025">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="generateIndividualYearlyData()">
+                            <i class="bi bi-search"></i> Generate Report
+                        </button>
+                        <button class="btn btn-success" onclick="exportIndividualExcel()">
+            <i class="bi bi-file-earmark-excel"></i> Excel
+        </button>
+                    </div>
+                </div>
+
+                <div id="individualReportContent" style="display:none;">
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 id="displayEmpName" class="mb-0"></h4>
+                            <small id="displayEmpDept" class="text-uppercase"></small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary fs-6" id="displayYearLabel"></span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Month</th>
+                                    <th class="text-center">Present</th>
+                                    <th class="text-center">PL</th>
+                                    <th class="text-center">CL</th>
+                                    <th class="text-center">SL</th>
+                                    <th class="text-center">FL</th>
+                                    <th class="text-center">COFF</th>
+                                    <th class="text-center">Holidays</th>
+                                    <th class="text-end">NSA Total (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="individualYearlyBody"></tbody>
+                            <tfoot class="table-dark" id="individualYearlyFooter"></tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="advancedBulkModal" tabindex="-1">
@@ -511,6 +577,9 @@
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <h4 class="mb-0">Employee Management</h4>
                 <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#individualYearlyModal">
+    <i class="bi bi-person-badge"></i> Individual Yearly Audit
+</button>
                     <button class="btn btn-warning fw-bold" onclick="openAdvancedBulkTool()">
                         <i class="bi bi-layers-fill"></i> Advanced Bulk Tool
                     </button>
@@ -1754,6 +1823,44 @@ function renderSummaryPagination(containerId, totalPages, currentPage, renderFn,
   }
 }
 
+function exportIndividualExcel() {
+    const empName = document.getElementById('displayEmpName').textContent;
+    const year = document.getElementById('individualYearInput').value;
+    const table = document.querySelector('#individualYearlyModal table');
+
+    if (!empName || !table || table.querySelector('tbody').children.length === 0) {
+        alert("Please generate the report first.");
+        return;
+    }
+
+    // Create a new workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Convert the HTML table to a worksheet
+    // raw: true ensures numbers stay as numbers for calculations
+    const ws = XLSX.utils.table_to_sheet(table, { raw: true });
+
+    // Set Column Widths for better readability
+    const wscols = [
+        { wch: 15 }, // Month
+        { wch: 10 }, // Present
+        { wch: 6 },  // PL
+        { wch: 6 },  // CL
+        { wch: 6 },  // SL
+        { wch: 6 },  // FL
+        { wch: 8 },  // COFF
+        { wch: 10 }, // Holidays
+        { wch: 15 }  // NSA Total
+    ];
+    ws['!cols'] = wscols;
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Yearly Audit");
+
+    // Save the file
+    const fileName = `Yearly_Audit_${empName.replace(/\s+/g, '_')}_${year}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
 /*********************
  * EMPLOYEE TABLE
  *********************/
@@ -2166,6 +2273,99 @@ async function populateAttendanceEmployees(){
   if(hiddenIdInput) hiddenIdInput.value = '';
   const calendar = document.getElementById('calendar');
   if(calendar) calendar.innerHTML = '<div class="col"><div class="alert alert-info text-center">Select an employee and a month to view the attendance calendar.</div></div>'; 
+}
+
+async function filterIndividualSearch() {
+    const input = document.getElementById('individualSearchInput');
+    const container = document.getElementById('individualSearchResults');
+    const filter = input.value.toLowerCase();
+
+    if (filter.length < 2) {
+        container.style.display = 'none';
+        return;
+    }
+
+    const employees = await getEmployeesFromDB();
+    const matches = employees.filter(e => 
+        e.name.toLowerCase().includes(filter) || e.id.toLowerCase().includes(filter)
+    );
+
+    container.innerHTML = '';
+    matches.forEach(emp => {
+        const btn = document.createElement('button');
+        btn.className = 'list-group-item list-group-item-action';
+        btn.innerHTML = `<strong>${emp.name}</strong> <small>(${emp.id})</small>`;
+        btn.onclick = () => {
+            document.getElementById('individualSearchInput').value = emp.name;
+            document.getElementById('selectedIndividualId').value = emp.id;
+            container.style.display = 'none';
+        };
+        container.appendChild(btn);
+    });
+    container.style.display = 'block';
+}
+
+async function generateIndividualYearlyData() {
+    const empId = document.getElementById('selectedIndividualId').value;
+    const year = document.getElementById('individualYearInput').value;
+
+    if (!empId) return alert("Please select an employee first.");
+
+    const emp = await getEmployeeById(empId);
+    const body = document.getElementById('individualYearlyBody');
+    const footer = document.getElementById('individualYearlyFooter');
+    
+    document.getElementById('individualReportContent').style.display = 'block';
+    document.getElementById('displayEmpName').textContent = emp.name;
+    document.getElementById('displayEmpDept').textContent = emp.department;
+    document.getElementById('displayYearLabel').textContent = `Year: ${year}`;
+
+    body.innerHTML = '<tr><td colspan="9" class="text-center">Calculating yearly data...</td></tr>';
+
+    let yearlyTotals = { p: 0, pl: 0, cl: 0, sl: 0, fl: 0, coff: 0, fh: 0, nsa: 0 };
+
+    body.innerHTML = '';
+    for (let m = 1; m <= 12; m++) {
+        const monthStr = `${year}-${String(m).padStart(2, '0')}`;
+        const data = await getMonthlyReportData(emp, monthStr);
+
+        yearlyTotals.p += data.finalPresentDays;
+        yearlyTotals.pl += data.leaves.PL;
+        yearlyTotals.cl += data.leaves.CL;
+        yearlyTotals.sl += data.leaves.SL;
+        yearlyTotals.fl += data.leaves.FL;
+        yearlyTotals.coff += data.leaves.COFF;
+        yearlyTotals.fh += data.fixedHolidaysCount;
+        yearlyTotals.nsa += data.totalNsaAmount;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="fw-bold">${MONTH_NAMES[m-1]}</td>
+            <td class="text-center">${data.finalPresentDays}</td>
+            <td class="text-center">${data.leaves.PL}</td>
+            <td class="text-center">${data.leaves.CL}</td>
+            <td class="text-center">${data.leaves.SL}</td>
+            <td class="text-center">${data.leaves.FL}</td>
+            <td class="text-center">${data.leaves.COFF}</td>
+            <td class="text-center text-muted">${data.fixedHolidaysCount}</td>
+            <td class="text-end fw-bold">₹${data.totalNsaAmount.toLocaleString()}</td>
+        `;
+        body.appendChild(tr);
+    }
+
+    footer.innerHTML = `
+        <tr>
+            <td>YEARLY TOTAL</td>
+            <td class="text-center">${yearlyTotals.p}</td>
+            <td class="text-center">${yearlyTotals.pl}</td>
+            <td class="text-center">${yearlyTotals.cl}</td>
+            <td class="text-center">${yearlyTotals.sl}</td>
+            <td class="text-center">${yearlyTotals.fl}</td>
+            <td class="text-center">${yearlyTotals.coff}</td>
+            <td class="text-center">${yearlyTotals.fh}</td>
+            <td class="text-end text-warning">₹${yearlyTotals.nsa.toLocaleString()}</td>
+        </tr>
+    `;
 }
 
 /*********************************
