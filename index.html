@@ -843,6 +843,8 @@
 
     const app = firebase.initializeApp(firebaseConfig);
     const db = app.firestore();
+
+    
     // ---------------------------------------------
 // This stores the employee data so we don't have to keep asking the internet
   let bulkEmployeeCache = [];
@@ -1376,37 +1378,39 @@ async function processBulkAttendance() {
  *********************/
 
 // EMPLOYEES
+/**
+ * HIGH-PERFORMANCE EMPLOYEE FETCHING
+ * Logic: Checks local memory first. If empty, fetches from DB once and stores it.
+ */
 async function getEmployeesFromDB() {
-    // 1. If we already have data in the cache, return it immediately
-    // This prevents unnecessary database reads and keeps the UI fast
+    // 1. MEMORY CHECK: Return immediately if we already have the data
+    // This makes tab switching (Attendance -> Summary) instant.
     if (bulkEmployeeCache && bulkEmployeeCache.length > 0) {
         return bulkEmployeeCache;
     }
 
-    // 2. If the cache is empty, fetch fresh data from Firestore
+    // 2. DATABASE FETCH: Only happens if cache is null or empty
     try {
         const snapshot = await db.collection(EMPLOYEES_COLLECTION).get();
         
-        // Check if the collection is actually empty
         if (snapshot.empty) {
-            console.log("No employees found in Firestore.");
-            bulkEmployeeCache = []; // Ensure cache is an empty array, not null
+            console.warn("Firestore: No employees found.");
+            bulkEmployeeCache = []; 
             return [];
         }
 
-        // Map the documents into a usable array
+        // 3. CACHE HYDRATION: Store data with ID mapped correctly
         bulkEmployeeCache = snapshot.docs.map(doc => ({ 
             id: doc.id, 
             ...doc.data() 
         }));
 
-        console.log(`Successfully fetched ${bulkEmployeeCache.length} employees.`);
+        console.log(`Cache Hydrated: ${bulkEmployeeCache.length} employees loaded.`);
         return bulkEmployeeCache;
 
     } catch (error) {
-        console.error("Database fetch failed or was blocked:", error.message);
-        // Return an empty array so the .filter() and .map() calls in 
-        // other functions (like Reporting) don't crash the app.
+        // 4. FAIL-SAFE: Return empty array to prevent .filter() or .map() crashes
+        console.error("Critical: Database fetch failed:", error.message);
         return []; 
     }
 }
@@ -2775,30 +2779,47 @@ function hideDeptSummary() {
 /*********************
  * MONTHLY SUMMARY LOGIC
  *********************/
+// Persistent cache to store reference data and avoid repeated DB hits
+const reportRefCache = {
+    nsaRules: null,
+    holidays: null,
+    holidayDates: null
+};
+
 async function getMonthlyReportData(emp, month) {
     const [year, m] = month.split('-').map(Number);
     const daysInMonth = new Date(year, m, 0).getDate();
     
+    // Optimized Data Fetching: 
+    // Only fetch Rules and Holidays if they aren't already in memory
     const [nsaRules, records, holidays] = await Promise.all([
-        getNsaRulesFromDB(),
-        getAttendanceFromDB(emp.id, month),
-        getHolidaysFromDB()
+        reportRefCache.nsaRules || getNsaRulesFromDB(),
+        getAttendanceFromDB(emp.id, month), // Attendance is unique to emp, must fetch
+        reportRefCache.holidays || getHolidaysFromDB()
     ]);
 
-    const holidayDates = holidays.map(h => h.date);
+    // Update Cache for subsequent calls
+    if (!reportRefCache.nsaRules) reportRefCache.nsaRules = nsaRules;
+    if (!reportRefCache.holidays) {
+        reportRefCache.holidays = holidays;
+        reportRefCache.holidayDates = holidays.map(h => h.date);
+    }
+
+    const holidayDates = reportRefCache.holidayDates;
     let leaves = { PL: 0, CL: 0, SL: 0, FL: 0, COFF: 0 }; 
     let fixedHolidaysCount = 0; 
     let finalPresentDays = 0;
     let totalNsaAmount = 0;
-    
-    // Ensure all shift keys are initialized to 0
     let shiftBreakdown = { MORNING_8_5: 0, NIGHT_6_3: 0, NIGHT_9_30_6_30: 0 }; 
 
+    // Create a local map for O(1) lookup speed inside the loop
     const recordMap = {};
     records.forEach(r => { recordMap[r.date] = r; });
 
     for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        
+        // Skip dates before join date
         if (dateStr < emp.joinDate) continue;
 
         const dateObj = new Date(year, m - 1, d);
@@ -2806,26 +2827,21 @@ async function getMonthlyReportData(emp, month) {
         const isHoliday = holidayDates.includes(dateStr);
         const record = recordMap[dateStr];
 
-        // LOGIC: PRIORITIZE SHIFT OVERRIDES
+        // LOGIC: Manual Attendance or Shift Overrides
         if (record && record.status === 'PRESENT') {
             finalPresentDays++;
-            
-            // PRIORITY: 1. Custom Shift from Record, 2. Default Shift from Employee Profile
             const effectiveShiftKey = record.customShift || emp.shift;
-            
             const nsaAmount = nsaRules[effectiveShiftKey]?.amount || 0;
             totalNsaAmount += nsaAmount;
 
-            // Increment the specific shift in breakdown
             if (shiftBreakdown.hasOwnProperty(effectiveShiftKey)) {
                 shiftBreakdown[effectiveShiftKey]++;
             }
         } 
-        // Default Presence for Weekdays
+        // LOGIC: Automatic Presence for Weekdays
         else if (!isWeekend && !isHoliday && !record) {
             finalPresentDays++;
-            const effectiveShiftKey = emp.shift; // Default shift
-            
+            const effectiveShiftKey = emp.shift; 
             const nsaAmount = nsaRules[effectiveShiftKey]?.amount || 0;
             totalNsaAmount += nsaAmount;
 
@@ -2833,11 +2849,13 @@ async function getMonthlyReportData(emp, month) {
                 shiftBreakdown[effectiveShiftKey]++;
             }
         }
+        // LOGIC: Recorded Leaves
         else if (record && record.status === 'LEAVE') {
             if (leaves.hasOwnProperty(record.leaveType)) {
                 leaves[record.leaveType]++;
             }
         }
+        // LOGIC: Fixed Holidays
         else if (isHoliday) {
             fixedHolidaysCount++;
         }
@@ -3019,32 +3037,32 @@ function renderSummaryChart(presentDays, leaves) {
 }
 
 
-async function renderDepartmentSummary(month){
+async function renderDepartmentSummary(month) {
   const tbody = document.querySelector('#deptSummaryTable tbody');
-  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Generating summary...</td></tr>';
+  const paginationContainer = document.getElementById('deptSummaryPagination');
   
-  // 1. Get employees (Uses your new fast cache)
-  const allEmployees = await getEmployeesFromDB();
-  const activeEmployees = allEmployees.filter(emp => emp.status === 'Active');
+  // Set initial loading state
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Calculating reports...</td></tr>';
   
   try {
-    // 2. SPEED BOOST: Fetch all monthly reports at the same time
-    console.log(`Loading reports for ${activeEmployees.length} employees...`);
-    const reportPromises = activeEmployees.map(emp => getMonthlyReportData(emp, month));
-    const allReports = await Promise.all(reportPromises); 
+    // 1. Get employees (Uses fast cache)
+    const allEmployees = await getEmployeesFromDB();
+    const activeEmployees = allEmployees.filter(emp => emp.status === 'Active');
+    
+    // 2. Parallel Processing
+    // Uses the optimized getMonthlyReportData which reuses cached NSA rules and holidays
+    const allReports = await Promise.all(activeEmployees.map(emp => getMonthlyReportData(emp, month))); 
 
     const reportData = [];
 
-    // 3. Process the results locally
+    // 3. Process results locally
     allReports.forEach((report, index) => {
         const emp = activeEmployees[index];
         const { finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount, leaves } = report;
 
-        // Skip if no working days in this month
         if (validWorkingDaysCount === 0) return; 
 
-        // Add to list if they have attendance or leaves
-        if(finalPresentDays > 0 || Object.values(leaves).some(l => l > 0)) {
+        if (finalPresentDays > 0 || Object.values(leaves).some(l => l > 0)) {
           reportData.push({ 
             emp, 
             days: finalPresentDays, 
@@ -3059,27 +3077,34 @@ async function renderDepartmentSummary(month){
     deptSummaryPage = Math.min(deptSummaryPage, totalPages) || 1;
     const start = (deptSummaryPage - 1) * ROWS_PER_PAGE;
     
+    // Clear loading state
     tbody.innerHTML = '';
     
     if (reportData.length === 0) {
          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No attendance data or NSA recorded for this month.</td></tr>';
-         document.getElementById('deptSummaryPagination').innerHTML = '';
+         if (paginationContainer) paginationContainer.innerHTML = '';
          return;
     }
 
-    // 5. Draw the Table
+    // 5. High-Speed Rendering using Document Fragment
+    // This builds the entire table page in memory before showing it to the user
+    const fragment = document.createDocumentFragment();
+
     reportData.slice(start, start + ROWS_PER_PAGE).forEach(item => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-          <td>${item.emp.name}</td>
-          <td>${item.emp.department}</td>
-          <td>${item.days}</td>
-          <td>${item.breakdown.MORNING_8_5 || 0}</td>
-          <td>${item.breakdown.NIGHT_6_3 || 0}</td>
-          <td>${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
-          <td>₹${item.nsa}</td>`;
-      tbody.appendChild(tr);
+          <td><strong>${item.emp.name}</strong></td>
+          <td><span class="badge bg-light text-dark">${item.emp.department}</span></td>
+          <td class="text-center">${item.days}</td>
+          <td class="text-center">${item.breakdown.MORNING_8_5 || 0}</td>
+          <td class="text-center">${item.breakdown.NIGHT_6_3 || 0}</td>
+          <td class="text-center">${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
+          <td class="text-end fw-bold text-success">₹${item.nsa.toLocaleString()}</td>`;
+      fragment.appendChild(tr);
     });
+
+    // Single DOM update for the whole page
+    tbody.appendChild(fragment);
 
     // 6. Update Pagination UI
     renderSummaryPagination(
