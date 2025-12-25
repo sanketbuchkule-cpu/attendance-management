@@ -847,6 +847,7 @@
     
     // ---------------------------------------------
 // This stores the employee data so we don't have to keep asking the internet
+
   let bulkEmployeeCache = [];
     document.getElementById('downloadSampleExcel').addEventListener('click', () => {
   // Sample employee data
@@ -1871,42 +1872,45 @@ function exportIndividualExcel() {
 // Add these variables at the top of your script
 let selectedEmployeeIds = new Set();
 
-async function renderEmployees(page = 1, filter = '') {
+async function renderEmployees(page = currentPage, filter = '') {
     const tbody = document.querySelector('#employeeTable tbody');
-    if (!tbody) return; // Safety check
+    if (!tbody) return; 
 
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading...</td></tr>';
+    // 1. REMOVED: bulkEmployeeCache = []; 
+    // We now trust the real-time listener. This makes the function instant.
     
-    // Clear cache to ensure we see fresh deletes
-    bulkEmployeeCache = []; 
     const allEmployees = await getEmployeesFromDB();
 
-    // Filter Logic
+    // 2. Filter & Sort Logic (Fast local processing)
     const deptFilter = document.getElementById('departmentFilter')?.value || '';
-    const filtered = allEmployees.filter(emp =>
-        ((emp.name || "").toLowerCase().includes(filter.toLowerCase()) || (emp.id || "").includes(filter)) &&
-        (!deptFilter || emp.department === deptFilter)
-    ).sort((a, b) => (a.id || "").localeCompare(b.id || ""));
+    const searchTerm = filter.toLowerCase();
 
-    // Pagination
+    const filtered = allEmployees.filter(emp => {
+        const matchesText = (emp.name || "").toLowerCase().includes(searchTerm) || 
+                            (emp.id || "").includes(filter);
+        const matchesDept = !deptFilter || emp.department === deptFilter;
+        return matchesText && matchesDept;
+    }).sort((a, b) => (a.id || "").localeCompare(b.id || ""));
+
+    // 3. Pagination calculation
     const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
     currentPage = Math.min(page, totalPages) || 1;
     const start = (currentPage - 1) * ROWS_PER_PAGE;
     const paginated = filtered.slice(start, start + ROWS_PER_PAGE);
 
-    tbody.innerHTML = '';
+    // 4. HIGH-SPEED RENDERING: Use DocumentFragment
+    // This prevents the page from flickering or jumping while loading.
+    const fragment = document.createDocumentFragment();
 
     if (paginated.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No employees found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-4">No employees found.</td></tr>';
+        renderPagination(0);
         return;
     }
 
     paginated.forEach(emp => {
         const tr = document.createElement('tr');
         const isChecked = selectedEmployeeIds.has(emp.id) ? 'checked' : '';
-        
-        // Define display variables for badges
-        const shiftDisplay = emp.shift || 'N/A';
         const statusClass = emp.status === 'Active' ? 'bg-success' : 'bg-secondary';
 
         tr.innerHTML = `
@@ -1918,27 +1922,29 @@ async function renderEmployees(page = 1, filter = '') {
             <td><strong>${emp.id}</strong></td>
             <td>${emp.name}</td>
             <td><span class="badge bg-light text-dark border">${emp.department}</span></td>
-            <td><span class="badge bg-info text-dark">${shiftDisplay}</span></td>
+            <td><span class="badge bg-info text-dark">${emp.shift || 'N/A'}</span></td>
             <td><span class="badge ${statusClass}">${emp.status || 'Active'}</span></td>
             <td class="text-end">
                 <div class="btn-group">
-                    <button class="btn btn-sm btn-outline-secondary" 
-                        onclick="viewEmployeeHistory('${emp.id}')" title="Attendance History">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="viewEmployeeHistory('${emp.id}')">
                         <i class="bi bi-clock-history"></i> History
                     </button>
-                    <button class="btn btn-sm btn-outline-primary" 
-                        onclick="editEmployee('${emp.id}')" title="Edit Details">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editEmployee('${emp.id}')">
                         <i class="bi bi-pencil"></i> Edit
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" 
-                        onclick="deleteEmployee('${emp.id}')" title="Delete">
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee('${emp.id}')">
                         <i class="bi bi-trash"></i> Delete
                     </button>
                 </div>
             </td>`;
-        tbody.appendChild(tr);
+        fragment.appendChild(tr);
     });
 
+    // Final single-action UI update
+    tbody.innerHTML = '';
+    tbody.appendChild(fragment);
+
+    // 5. Update the pagination numbers
     renderPagination(totalPages);
 }
 
@@ -1961,15 +1967,38 @@ function filterEmployees() {
   renderEmployees(1, document.getElementById('employeeSearch').value);
 }
 
-function renderPagination(totalPages){
+function renderPagination(totalPages) {
   const container = document.getElementById('employeePagination');
-  container.innerHTML='';
-  for(let i=1;i<=totalPages;i++){
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  for (let i = 1; i <= totalPages; i++) {
     const li = document.createElement('li');
-    li.className=`page-item ${i===currentPage?'active':''}`;
-    li.innerHTML=`<a class="page-link" href="#" onclick="renderEmployees(${i})">${i}</a>`;
+    // Highlight the active page
+    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    
+    // Fix: We call a dedicated function and pass 'i'
+    li.innerHTML = `
+      <a class="page-link" 
+         href="javascript:void(0)" 
+         onclick="handlePageClick(event, ${i})">
+         ${i}
+      </a>`;
+      
     container.appendChild(li);
   }
+}
+
+// Add this helper function to manage the state correctly
+function handlePageClick(event, pageNum) {
+    if (event) event.preventDefault();
+    
+    // 1. Update the global variable
+    currentPage = pageNum;
+    
+    // 2. Re-render the table
+    renderEmployees();
 }
 
 /*********************
