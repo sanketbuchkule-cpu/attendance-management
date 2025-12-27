@@ -436,6 +436,31 @@ tbody tr:hover {
     border-color: #002147 !important;
 }
 
+/* Custom DealerOn Danger Button Styles */
+.btn-outline-danger {
+    color: #dc3545;
+    border: 2px solid #dc3545 !important; /* Bold border like your other buttons */
+    font-weight: 700;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: #ffffff;
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+}
+
+/* Ensure the trash icon in the group looks consistent */
+.btn-group .btn-outline-danger {
+    color: #dc3545;
+}
+
+.btn-group .btn-outline-danger:hover {
+    background-color: #fff5f5;
+    color: #a71d2a;
+}
+
+
 </style>
 </head>
 <body>
@@ -909,89 +934,126 @@ tbody tr:hover {
 
         <div class="tab-pane fade show active" id="management-content" role="tabpanel" aria-labelledby="management-tab">
             
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h4 class="mb-3">NSA Rules & Settings</h4>
-                    <div id="nsaRulesContainer" class="row g-3"></div>
-                    <button class="btn btn-success mt-3" onclick="saveNsaRules()"><i class="bi bi-plus-lg me-1"></i>Save NSA Rules</button>
-                </div>
+           <div class="card border-0 shadow-sm mb-4" style="border-top: 5px solid #FF8C00 !important;">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-4">
+            <div class="p-2 rounded me-3" style="background-color: rgba(0, 33, 71, 0.1);">
+                <i class="bi bi-gear-wide-connected fs-4" style="color: #002147;"></i>
             </div>
+            <div>
+                <h4 class="mb-0 fw-bold" style="color: #002147;">NSA Rules & Settings</h4>
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Night Shift Allowance Configuration</small>
+            </div>
+        </div>
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h4 class="mb-3">Holiday Management</h4>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Date</label>
-                            <input type="date" class="form-control" id="holidayDate">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Name (Optional)</label>
-                            <input type="text" class="form-control" id="holidayName" placeholder="e.g., Independence Day">
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button class="btn btn-primary" data-tooltip="Save this date as a Public Holiday" onclick="addHoliday()"><i class="bi bi-plus-lg me-1"></i>Add Holiday</button>
-                        </div>
-                    </div>
-                    <hr>
-                    <h5 class="mt-3">Upcoming Holidays</h5>
-                    <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                        <table class="table table-sm table-striped">
-                            <thead><tr><th>Date</th><th>Name</th><th>Actions</th></tr></thead>
-                            <tbody id="holidaysList"></tbody>
-                        </table>
-                    </div>
+        <div class="p-3 rounded mb-2" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
+            <div id="nsaRulesContainer" class="row g-4">
+                </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+            <button class="btn btn-md text-white fw-bold shadow-sm px-4" 
+                    style="background-color: #002147; transition: all 0.3s;" 
+                    onclick="saveNsaRules()">
+                <i class="bi bi-check2-circle me-2"></i>Save NSA Configuration
+            </button>
+        </div>
+    </div>
+</div>
+
+            <div class="card border-0 shadow-sm mb-4" style="border-top: 5px solid #FF8C00 !important;">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold text-navy mb-0">
+                <i class="bi bi-calendar-event me-2 text-orange" style="color: #FF8C00;"></i>Holiday Management
+            </h5>
+            <span class="badge bg-navy px-3 py-2" id="holidayTotalCount" style="background-color: #002147;">0 Holidays Total</span>
+        </div>
+
+        <div class="row g-3 p-3 rounded bg-light border mb-4">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted text-uppercase">Holiday Date</label>
+                <input type="date" class="form-control border-2" id="holidayDate">
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small fw-bold text-muted text-uppercase">Holiday Name (Optional)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-pencil-square text-navy"></i></span>
+                    <input type="text" class="form-control border-start-0 border-2" id="holidayName" placeholder="e.g., Independence Day">
                 </div>
             </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn w-100 text-white fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                        style="background-color: #002147; height: 38px;" 
+                        onclick="addHoliday()">
+                    <i class="bi bi-plus-lg"></i> Add Holiday
+                </button>
+            </div>
+        </div>
+
+        <h6 class="fw-bold text-navy mb-3 mt-2 text-uppercase small">Saved Holidays</h6>
+        <div class="table-responsive rounded border shadow-sm bg-white mb-3">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th class="ps-3 py-3 text-white small fw-bold">DATE</th>
+                        <th class="py-3 text-white small fw-bold">HOLIDAY NAME</th>
+                        <th class="pe-3 py-3 text-end text-white small fw-bold">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="holidaysList">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded border">
+            <small class="text-muted fw-bold ps-2" id="holidayPageInfo">Showing page 1 of 1</small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0 gap-1">
+                    <li class="page-item"><button class="page-link rounded border-0 text-navy fw-bold" onclick="changeHolidayPage(-1)"><i class="bi bi-chevron-left"></i></button></li>
+                    <li class="page-item active"><span class="page-link rounded border-0 shadow-sm" id="currentHolidayPage" style="background-color: #FF8C00; border-color: #FF8C00;">1</span></li>
+                    <li class="page-item"><button class="page-link rounded border-0 text-navy fw-bold" onclick="changeHolidayPage(1)"><i class="bi bi-chevron-right"></i></button></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <div class="d-flex align-items-center">
-        <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
-            <i class="bi bi-people-fill text-primary fs-4"></i>
+        <div class="p-2 rounded me-3" style="background-color: rgba(0, 33, 71, 0.1);">
+            <i class="bi bi-people-fill fs-4" style="color: #002147;"></i>
         </div>
-        <h4 class="mb-0 fw-bold text-navy">Employee Management</h4>
+        <div>
+            <h4 class="mb-0 fw-bold" style="color: #002147;">Employee Management</h4>
+            <small class="text-muted fw-bold" id="empTotalCounter">Syncing records...</small>
+        </div>
     </div>
     
     <div class="d-flex gap-2 flex-wrap">
-        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#employeeModal" onclick="clearForm()">
+        <button class="btn shadow-sm text-white fw-bold px-3" style="background-color: #002147;" data-bs-toggle="modal" data-bs-target="#employeeModal" onclick="clearForm()">
             <i class="bi bi-plus-lg me-1"></i> Add Employee
         </button>
 
-        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#individualYearlyModal">
+        <button class="btn btn-outline-navy fw-bold" style="border: 2px solid #002147; color: #002147;" data-bs-toggle="modal" data-bs-target="#individualYearlyModal">
             <i class="bi bi-person-badge me-1"></i> Yearly Audit
         </button>
         
-        <button class="btn btn-warning fw-bold" onclick="openAdvancedBulkTool()">
+        <button class="btn fw-bold text-white shadow-sm" style="background-color: #FF8C00;" onclick="openAdvancedBulkTool()">
             <i class="bi bi-layers-fill me-1"></i> Advanced Bulk Attendance Tool
         </button>
 
         <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="excelDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-secondary dropdown-toggle fw-bold shadow-sm" type="button" id="excelDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-file-earmark-excel me-1"></i> Bulk Actions
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="excelDropdown">
-                <li>
-                    <h6 class="dropdown-header">Import Options</h6>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#bulkEmployeeModal">
-                        <i class="bi bi-plus-square me-2 text-secondary"></i>+ Bulk Employee Add
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="#" onclick="document.getElementById('empExcelFile').click()">
-                        <i class="bi bi-cloud-upload me-2 text-success"></i>Import Bulk Excel
-                    </a>
-                </li>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" aria-labelledby="excelDropdown">
+                <li><h6 class="dropdown-header small text-uppercase fw-bold text-muted">Import Options</h6></li>
+                <li><a class="dropdown-item rounded py-2" href="#" data-bs-toggle="modal" data-bs-target="#bulkEmployeeModal"><i class="bi bi-plus-square me-2 text-primary"></i>Bulk Employee Add</a></li>
+                <li><a class="dropdown-item rounded py-2" href="#" onclick="document.getElementById('empExcelFile').click()"><i class="bi bi-cloud-upload me-2 text-success"></i>Import Bulk Excel</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li>
-                    <h6 class="dropdown-header">Resources</h6>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="#" id="downloadSampleExcel">
-                        <i class="bi bi-file-earmark-arrow-down me-2 text-info"></i>Sample Excel
-                    </a>
-                </li>
+                <li><h6 class="dropdown-header small text-uppercase fw-bold text-muted">Resources</h6></li>
+                <li><a class="dropdown-item rounded py-2" href="#" id="downloadSampleExcel"><i class="bi bi-file-earmark-arrow-down me-2 text-info"></i>Sample Excel</a></li>
             </ul>
         </div>
     </div>
@@ -999,26 +1061,26 @@ tbody tr:hover {
 
 <input type="file" id="empExcelFile" accept=".xlsx,.xls" style="display:none" onchange="handleExcelUpload(event)">
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <div class="p-3">
+<div class="card border-0 shadow-sm mb-4" style="border-top: 5px solid #FF8C00 !important;">
+    <div class="card-body p-0">
+        <div class="p-3 bg-light border-bottom">
             <div class="row g-3 align-items-center">
                 <div class="col-md-3">
-                    <select class="form-select" id="departmentFilter" onchange="filterEmployees()">
+                    <select class="form-select border-2" id="departmentFilter" onchange="filterEmployees()">
                         <option value="">All Departments</option>
                     </select>
                 </div>
                 <div class="col-md-4">
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input class="form-control border-start-0" id="employeeSearch" placeholder="Search ID or Name..." oninput="filterEmployees()" />
+                        <span class="input-group-text bg-white border-end-0 border-2"><i class="bi bi-search text-muted"></i></span>
+                        <input class="form-control border-start-0 border-2" id="employeeSearch" placeholder="Search ID or Name..." oninput="filterEmployees()" />
                     </div>
                 </div>
                 <div class="col-md-5 d-flex justify-content-md-end gap-2">
-                    <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedEmployees()">
+                    <button class="btn btn-outline-danger btn-sm fw-bold px-3" onclick="deleteSelectedEmployees()">
                         <i class="bi bi-trash me-1"></i> Delete Selected
                     </button>
-                    <button class="btn btn-dark btn-sm" onclick="deleteAllEmployees()">
+                    <button class="btn btn-dark btn-sm fw-bold px-3" onclick="deleteAllEmployees()">
                         <i class="bi bi-exclamation-triangle me-1"></i> Delete All
                     </button>
                 </div>
@@ -1027,224 +1089,375 @@ tbody tr:hover {
 
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="employeeTable">
-                <thead class="bg-light">
+                <thead style="background-color: #002147; color: white;">
                     <tr>
                         <th style="width: 50px;" class="ps-3">
-                            <input type="checkbox" class="form-check-input" id="selectAllHeader" onclick="toggleSelectAll(this)">
+                            <input type="checkbox" class="form-check-input border-2" id="selectAllHeader" onclick="toggleSelectAll(this)">
                         </th>
                         <th>ID</th>
-                        <th>Name</th>
-                        <th>Department</th>
-                        <th>Shift</th>
-                        <th>Status</th>
-                        <th class="text-end pe-3">Actions</th>
+                        <th>NAME</th>
+                        <th>DEPARTMENT</th>
+                        <th>SHIFT</th>
+                        <th>STATUS</th>
+                        <th class="text-end pe-4">ACTIONS</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="border-top-0">
                     </tbody>
             </table>
         </div>
     </div>
     
     <div class="card-footer bg-white border-top py-3">
-        <nav>
-            <ul class="pagination pagination-sm justify-content-center mb-0" id="employeePagination"></ul>
-        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted fw-bold" id="empPageInfo">Showing 0-0 of 0</small>
+            <nav aria-label="Employee Pagination">
+                <ul class="pagination pagination-sm mb-0 gap-1" id="employeePagination">
+                    </ul>
+            </nav>
+        </div>
     </div>
 </div>
-        </div> 
-        <div class="tab-pane fade" id="attendance-content" role="tabpanel" aria-labelledby="attendance-tab">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h4 class="mb-3">Attendance Calendar</h4>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-3 position-relative">
-                            <label class="form-label">Search Employee</label>
-                            <input type="text" class="form-control" id="attendanceSearchInput" placeholder="Type name or ID..." oninput="filterAttendanceEmployees()">
-                            <input type="hidden" id="attendanceEmployee">
-                            <div id="attendanceSearchResults" class="list-group position-absolute w-100 mt-1 shadow search-results-container" style="z-index: 1000; max-height: 200px; overflow-y: auto; display: none;"></div>
+</div> 
+       <div class="tab-pane fade" id="attendance-content" role="tabpanel" aria-labelledby="attendance-tab">
+    <div class="card border-0 shadow-sm mb-4" style="border-top: 5px solid #FF8C00 !important;">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="p-2 rounded me-3" style="background-color: rgba(0, 33, 71, 0.1);">
+                    <i class="bi bi-calendar-check-fill fs-4" style="color: #002147;"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-bold" style="color: #002147;">Attendance Management</h4>
+                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Interactive Monthly Scheduler</small>
+                </div>
+            </div>
+
+            <div class="p-3 rounded mb-4" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3 position-relative">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Employee Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-2 border-end-0"><i class="bi bi-person-search"></i></span>
+                            <input type="text" class="form-control border-2 border-start-0" id="attendanceSearchInput" placeholder="Name or ID..." oninput="filterAttendanceEmployees()">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Month</label>
-                            <div class="input-group">
-                                <button class="btn btn-outline-secondary" type="button" onclick="changeMonth(-1)" title="Previous Month">«</button>
-                                <input type="month" class="form-control" id="attendanceMonth" min="2023-01"/>
-                                <button class="btn btn-outline-secondary" type="button" onclick="changeMonth(1)" title="Next Month">»</button>
-                            </div>
-                        </div>
-                        <div class="col-md-6 d-flex align-items-end gap-2 flex-wrap">
-                            <button class="btn btn-success" onclick="markSelected('PRESENT')">Mark Present</button>
-                            <div class="dropdown">
-                                <button class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown">Mark Leave</button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" onclick="markSelected('LEAVE','PL')">PL</a></li>
-                                    <li><a class="dropdown-item" onclick="markSelected('LEAVE','CL')">CL</a></li>
-                                    <li><a class="dropdown-item" onclick="markSelected('LEAVE','SL')">SL</a></li>
-                                    <li><a class="dropdown-item" onclick="markSelected('LEAVE','FL')">FL</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item fw-bold" onclick="markSelected('LEAVE','COFF')">COFF</a></li>
-                                </ul>
-                            </div>
-                            <button class="btn btn-info" onclick="openShiftOverrideModal()">Mark Shift Change</button>
-                            <button class="btn btn-secondary" onclick="clearSelected()">Clear Selected</button>
-                            <button class="btn btn-danger" onclick="clearAllForEmployee()">Clear Month</button>
+                        <input type="hidden" id="attendanceEmployee">
+                        <div id="attendanceSearchResults" class="list-group position-absolute w-100 mt-1 shadow search-results-container" style="z-index: 1050; max-height: 200px; overflow-y: auto; display: none;"></div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Target Month</label>
+                        <div class="input-group border-2">
+                            <button class="btn btn-outline-navy border-2 shadow-sm" type="button" onclick="changeMonth(-1)" title="Previous Month"><i class="bi bi-chevron-left"></i></button>
+                            <input type="month" class="form-control border-2 text-center fw-bold" id="attendanceMonth" min="2023-01" style="color: #002147;"/>
+                            <button class="btn btn-outline-navy border-2 shadow-sm" type="button" onclick="changeMonth(1)" title="Next Month"><i class="bi bi-chevron-right"></i></button>
                         </div>
                     </div>
-                    <div id="calendarHeaders" class="row row-cols-7 g-2 text-center mb-1">
-                        <div class="col fw-bold">Sun</div>
-                        <div class="col fw-bold">Mon</div>
-                        <div class="col fw-bold">Tue</div>
-                        <div class="col fw-bold">Wed</div>
-                        <div class="col fw-bold">Thu</div>
-                        <div class="col fw-bold">Fri</div>
-                        <div class="col fw-bold">Sat</div>
+
+                    <div class="col-md-6 d-flex gap-2 flex-wrap">
+                        <button class="btn fw-bold text-white shadow-sm flex-grow-1" style="background-color: #198754;" onclick="markSelected('PRESENT')">
+                            <i class="bi bi-check-circle me-1"></i> Mark Present
+                        </button>
+                        
+                        <div class="dropdown flex-grow-1">
+                            <button class="btn fw-bold text-white dropdown-toggle w-100 shadow-sm" style="background-color: #FF8C00;" data-bs-toggle="dropdown">
+                                <i class="bi bi-sun me-1"></i> Mark Leave
+                            </button>
+                            <ul class="dropdown-menu shadow border-0">
+                                <li><a class="dropdown-item py-2 fw-bold text-primary" onclick="markSelected('LEAVE','PL')">Paid Leave (PL)</a></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-primary" onclick="markSelected('LEAVE','CL')">Casual Leave (CL)</a></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-primary" onclick="markSelected('LEAVE','SL')">Sick Leave (SL)</a></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-primary" onclick="markSelected('LEAVE','FL')">Festival Leave (FL)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-navy" onclick="markSelected('LEAVE','COFF')">Comp. Off (COFF)</a></li>
+                            </ul>
+                        </div>
                     </div>
-                    <div id="calendar" class="row row-cols-7 g-2">
-                         <div class="col-12"><div class="alert alert-info text-center">Select an employee and a month to view the attendance calendar.</div></div>
+                </div>
+
+                <div class="d-flex gap-2 mt-3 pt-3 border-top">
+                    <button class="btn btn-sm btn-outline-navy fw-bold" onclick="openShiftOverrideModal()">
+                        <i class="bi bi-clock-history me-1"></i> Shift Override
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="clearSelected()">
+                        <i class="bi bi-eraser me-1"></i> Clear Selected
+                    </button>
+                    <div class="ms-auto">
+                        <button class="btn btn-sm btn-outline-danger fw-bold" onclick="clearAllForEmployee()">
+                            <i class="bi bi-trash3 me-1"></i> Clear Entire Month
+                        </button>
                     </div>
                 </div>
             </div>
-        </div> 
+
+            <div class="calendar-wrapper p-2 rounded border bg-white shadow-inner">
+                <div id="calendarHeaders" class="row row-cols-7 g-1 text-center mb-2">
+                    <div class="col py-2 fw-bold text-muted small text-uppercase">Sun</div>
+                    <div class="col py-2 fw-bold text-muted small text-uppercase">Mon</div>
+                    <div class="col py-2 fw-bold text-muted small text-uppercase">Tue</div>
+                    <div class="col py-2 fw-bold text-muted small text-uppercase">Wed</div>
+                    <div class="col py-2 fw-bold text-muted small text-uppercase">Thu</div>
+                    <div class="col py-2 fw-bold text-muted small text-uppercase">Fri</div>
+                    <div class="col py-2 fw-bold text-muted small text-uppercase">Sat</div>
+                </div>
+                <div id="calendar" class="row row-cols-7 g-1 min-vh-50">
+                     <div class="col-12"><div class="alert bg-light border text-center py-5 text-muted">Select an employee and month above to begin marking attendance.</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
         
         <div class="tab-pane fade" id="summary-content" role="tabpanel" aria-labelledby="summary-tab">
             
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h4 class="mb-3">Employee Monthly Summary</h4>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4 position-relative">
-                            <label class="form-label">Search Employee</label>
-                            <input type="text" class="form-control" id="summarySearchInput" placeholder="Type name or ID..." oninput="filterSummaryEmployees()">
-                            <input type="hidden" id="summaryEmployee">
-                            <div id="summarySearchResults" class="list-group position-absolute w-100 mt-1 shadow search-results-container" style="z-index: 1000; max-height: 200px; overflow-y: auto; display: none;"></div>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Month</label>
-                            <input type="month" class="form-control" id="summaryMonth">
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end gap-2 flex-wrap">
-                            <button class="btn btn-primary" onclick="renderEmployeeSummary()">View Summary</button>
-                            <button class="btn btn-secondary d-none" id="backSummaryBtn" onclick="hideEmployeeSummary()">Reset</button>
-                            <button class="btn btn-success" onclick="exportEmpSummary()">Export Employee</button>
-                        </div>
-                    </div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-9" id="employeeSummary">
-                            <div class="alert alert-info text-center">Select an employee and month, and click 'View Summary' above.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card p-2 text-center">
-                                <h6 class="text-muted">Attendance Status</h6>
-                                <canvas id="summaryChart" style="max-height: 200px;"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="card border-0 shadow-sm mb-4" style="border-top: 5px solid #FF8C00 !important;">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-4">
+            <div class="p-2 rounded me-3" style="background-color: rgba(0, 33, 71, 0.1);">
+                <i class="bi bi-person-badge-fill fs-4" style="color: #002147;"></i>
             </div>
+            <h4 class="mb-0 fw-bold" style="color: #002147;">Employee Monthly Summary</h4>
+        </div>
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0">All Department Monthly Summary</h4>
-                        <button class="btn btn-info" onclick="exportDeptSummary()">Export All Monthly Data</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="deptSummaryTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Employee</th><th>Department</th><th>Present Days</th><th>M-Shift (SC-M)</th><th>N1-Shift (SC-N6-3)</th><th>N2-Shift (SC-N9-6)</th><th>Total NSA (₹)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="7" class="text-center text-muted">Summary will appear after clicking 'View Summary' above.</td></tr>
-                            </tbody>
-                        </table>
-                        <nav><ul class="pagination justify-content-center" id="deptSummaryPagination"></ul></nav>
-                    </div>
+        <div class="row g-3 mb-4 p-3 rounded" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
+            <div class="col-md-4 position-relative">
+                <label class="form-label small fw-bold text-muted text-uppercase">Search Employee</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-2 border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-2 border-start-0" id="summarySearchInput" placeholder="Name or ID..." oninput="filterSummaryEmployees()">
                 </div>
+                <input type="hidden" id="summaryEmployee">
+                <div id="summarySearchResults" class="list-group position-absolute w-100 mt-1 shadow search-results-container" style="z-index: 1050; max-height: 200px; overflow-y: auto; display: none;"></div>
             </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted text-uppercase">Month</label>
+                <input type="month" class="form-control border-2" id="summaryMonth">
+            </div>
+            <div class="col-md-5 d-flex align-items-end gap-2">
+                <button class="btn text-white fw-bold shadow-sm px-4" style="background-color: #002147;" onclick="renderEmployeeSummary()">
+                    View Summary
+                </button>
+                <button class="btn btn-outline-secondary fw-bold d-none" id="backSummaryBtn" onclick="hideEmployeeSummary()">Reset</button>
+                <button class="btn btn-outline-success fw-bold shadow-sm" onclick="exportEmpSummary()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export
+                </button>
+            </div>
+        </div>
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0">Department Monthly Breakdown</h4>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-secondary d-none" id="backDeptSummaryBtn" onclick="hideDeptSummary()">Reset</button>
-                            <button class="btn btn-info" onclick="exportDeptMonthlySummary()">Export Breakdown</button>
-                        </div>
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Department</label>
-                            <select class="form-select" id="deptSummaryDept"><option value="">All Departments</option></select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Month</label>
-                            <input type="month" class="form-control" id="deptSummaryMonth">
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end"><button class="btn btn-primary" onclick="renderDeptMonthlySummary()">View Breakdown</button></div>
-                    </div>
-                    <div class="table-responsive">
-                       <table class="table table-bordered table-striped" id="deptMonthlySummary">
-    <thead class="table-light">
-        <tr>
-            <th>Employee</th>
-            <th>P (Total)</th>
-            <th>M-Shift (SC-M)</th>
-            <th>N1-Shift (SC-N1)</th>
-            <th>N2-Shift (SC-N2)</th>
-            <th>PL</th>
-            <th>CL</th>
-            <th>SL</th>
-            <th>FL</th>
-            <th class="table-info">COFF</th> <th class="table-warning">FH</th> <th>Total NSA (₹)</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan="12" class="text-center text-muted">
-                Select a department and month to view breakdown.
-            </td>
-        </tr>
-    </tbody>
-</table>
-                        <nav><ul class="pagination justify-content-center" id="deptMonthlySummaryPagination"></ul></nav>
-                    </div>
+        <div class="row g-3">
+            <div class="col-md-8" id="employeeSummary">
+                <div class="alert bg-light border text-center py-4">
+                    <i class="bi bi-info-circle d-block fs-2 mb-2 text-muted"></i>
+                    Select an employee and month, then click <strong>View Summary</strong>.
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 text-center h-100" style="background-color: #fcfcfc;">
+                    <h6 class="fw-bold text-uppercase small mb-3" style="color: #002147;">Attendance Status</h6>
+                    <canvas id="summaryChart" style="max-height: 220px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0">Yearly Summary</h4>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-warning" onclick="viewMonthlyBreakdown()">View Monthly Breakdown Table</button>
-                            <button class="btn btn-info" onclick="exportYearlySummary()">Export Yearly Data</button>
-                        </div>
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Year</label>
-                            <input type="number" class="form-control" id="yearlySummaryYear" value="2025" min="2023" max="2050">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Department Filter</label>
-                            <select class="form-select" id="yearlySummaryDept"><option value="">All Departments</option></select>
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end"><button class="btn btn-primary" onclick="renderYearlySummary()">Generate Yearly Summary</button></div>
-                    </div>
-                    <div class="table-responsive" id="yearlySummaryResults">
-                        <table class="table table-bordered table-striped">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Employee</th><th>Department</th><th>P (Total)</th><th>M-Shift (SC-M)</th><th>N1-Shift (SC-N6-3)</th><th>N2-Shift (SC-N9-6)</th><th>PL</th><th>CL</th><th>SL</th><th>FL</th><th>Total NSA (₹)</th>
-                                </tr>
-                            </thead>
-                            <tbody><tr><td colspan="11" class="text-center text-muted">Select a year and click 'Generate Yearly Summary'.</td></tr></tbody>
-                        </table>
-                    </div>
+           <div class="card border-0 shadow-sm mb-4" style="border-top: 5px solid #002147 !important;">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0 fw-bold" style="color: #002147;">All Department Monthly Summary</h4>
+            <button class="btn text-white fw-bold shadow-sm" style="background-color: #FF8C00;" onclick="exportDeptSummary()">
+                <i class="bi bi-download me-1"></i> Export All Data
+            </button>
+        </div>
+
+        <div class="table-responsive border rounded">
+            <table class="table table-hover align-middle mb-0" id="deptSummaryTable">
+                <thead style="background-color: #002147; color: white;">
+                    <tr>
+                        <th class="ps-3">Employee</th>
+                        <th>Department</th>
+                        <th class="text-center">Present Days</th>
+                        <th class="text-center">M-Shift</th>
+                        <th class="text-center">N1-Shift</th>
+                        <th class="text-center">N2-Shift</th>
+                        <th class="text-end pe-3">Total NSA (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            Data will appear after clicking <strong>View Summary</strong> above.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-white border-top py-3">
+        <nav>
+            <ul class="pagination pagination-sm justify-content-center mb-0 gap-1" id="deptSummaryPagination"></ul>
+        </nav>
+    </div>
+</div>
+
+            <div class="card border-0 shadow-sm mb-4" style="border-top: 5px solid #FF8C00 !important;">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div class="d-flex align-items-center">
+                <div class="p-2 rounded me-3" style="background-color: rgba(0, 33, 71, 0.1);">
+                    <i class="bi bi-pie-chart-fill fs-4" style="color: #002147;"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-bold" style="color: #002147;">Department Monthly Breakdown</h4>
+                    <small class="text-muted fw-bold">Departmental Attendance & NSA Analysis</small>
                 </div>
             </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary fw-bold d-none" id="backDeptSummaryBtn" onclick="hideDeptSummary()">
+                    <i class="bi bi-arrow-left me-1"></i> Reset
+                </button>
+                <button class="btn fw-bold text-white shadow-sm" style="background-color: #002147;" onclick="exportDeptMonthlySummary()">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Export Breakdown
+                </button>
+            </div>
+        </div>
+
+        <div class="p-3 rounded mb-4" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-uppercase text-muted">Select Department</label>
+                    <select class="form-select border-2" id="deptSummaryDept">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-uppercase text-muted">Target Month</label>
+                    <input type="month" class="form-control border-2" id="deptSummaryMonth">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn fw-bold text-white w-100 shadow-sm" style="background-color: #FF8C00;" onclick="renderDeptMonthlySummary()">
+                        <i class="bi bi-search me-1"></i> Generate Breakdown
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive border rounded">
+            <table class="table table-hover align-middle mb-0" id="deptMonthlySummary">
+                <thead style="background-color: #002147; color: white;">
+                    <tr>
+                        <th class="ps-3">Employee</th>
+                        <th class="text-center">P</th>
+                        <th class="text-center">M-Shift</th>
+                        <th class="text-center">N1-Shift</th>
+                        <th class="text-center">N2-Shift</th>
+                        <th class="text-center">PL</th>
+                        <th class="text-center">CL</th>
+                        <th class="text-center">SL</th>
+                        <th class="text-center">FL</th>
+                        <th class="text-center" style="background-color: rgba(255,255,255,0.1);">COFF</th>
+                        <th class="text-center" style="background-color: rgba(255,255,255,0.1);">FH</th>
+                        <th class="text-end pe-3">Total NSA (₹)</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    <tr>
+                        <td colspan="12" class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar2-check d-block fs-1 mb-2 opacity-25"></i>
+                            Select filters above to view monthly data.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="card-footer bg-white border-top py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted fw-bold" id="deptPageInfo">Showing 0 of 0 records</small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0 gap-1" id="deptMonthlySummaryPagination">
+                    </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+     <div class="card border-0 shadow-sm mb-4" style="border-top: 5px solid #FF8C00 !important;">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div class="d-flex align-items-center">
+                <div class="p-2 rounded me-3" style="background-color: rgba(0, 33, 71, 0.1);">
+                    <i class="bi bi-calendar-range-fill fs-4" style="color: #002147;"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-bold" style="color: #002147;">Yearly Summary</h4>
+                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Annual Performance Overview</small>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn fw-bold shadow-sm px-3" onclick="viewMonthlyBreakdown()" 
+                        style="border: 2px solid #002147; color: #002147; background-color: white;">
+                    <i class="bi bi-table me-2"></i> Monthly Table
+                </button>
+                <button class="btn text-white fw-bold shadow-sm" style="background-color: #002147;" onclick="exportYearlySummary()">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Export
+                </button>
+            </div>
+        </div>
+
+        <div class="p-3 rounded mb-4" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Year</label>
+                    <input type="number" class="form-control border-2" id="yearlySummaryYear" value="2025">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Department</label>
+                    <select class="form-select border-2" id="yearlySummaryDept">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex gap-2">
+                    <button class="btn fw-bold text-white w-100 shadow-sm" style="background-color: #FF8C00;" onclick="renderYearlySummary(1)">
+                        Generate Summary
+                    </button>
+                    <button class="btn btn-outline-secondary fw-bold px-4 d-none" id="backYearlyBtn" onclick="resetYearlySummary()">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive border rounded" id="yearlySummaryResults">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #002147; color: white;">
+                    <tr>
+                        <th class="ps-3">Employee</th>
+                        <th>Department</th>
+                        <th class="text-center">P</th>
+                        <th class="text-center">M-Shift</th>
+                        <th class="text-center">N1-Shift</th>
+                        <th class="text-center">N2-Shift</th>
+                        <th class="text-center">PL</th>
+                        <th class="text-center">CL</th>
+                        <th class="text-center">SL</th>
+                        <th class="text-center">FL</th>
+                        <th class="text-end pe-3">Total NSA (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="11" class="text-center py-5 text-muted">Select filters and click Generate.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-white border-top py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted fw-bold" id="yearlyPageInfo">Showing 0 of 0 records</small>
+            <nav><ul class="pagination pagination-sm mb-0 gap-1" id="yearlySummaryPagination"></ul></nav>
+        </div>
+    </div>
+</div>
 
         </div> </div> </div>
 
@@ -1374,6 +1587,24 @@ async function startSecureSession() {
     }
 }
 
+function resetYearlySummary() {
+    // 1. Reset Filters to default
+    document.getElementById('yearlySummaryYear').value = new Date().getFullYear();
+    document.getElementById('yearlySummaryDept').value = "";
+    
+    // 2. Clear Table
+    const tbody = document.querySelector('#yearlySummaryResults tbody');
+    tbody.innerHTML = '<tr><td colspan="11" class="text-center py-5 text-muted">Select filters and click Generate.</td></tr>';
+    
+    // 3. Reset Pagination and Info
+    document.getElementById('yearlySummaryPagination').innerHTML = '';
+    document.getElementById('yearlyPageInfo').innerText = 'Showing 0 of 0 records';
+    
+    // 4. Hide Reset Button
+    document.getElementById('backYearlyBtn').classList.add('d-none');
+    
+    yearlySummaryPage = 1;
+}
 /**
  * Handles the Login button click
  */
@@ -1964,10 +2195,18 @@ async function getNsaRulesFromDB() {
 }
 async function saveNsaRulesToDB(rules) {
     try {
-        await db.collection(SETTINGS_COLLECTION).doc(NSA_RULES_DOC_ID).set({ rules: rules });
+        // We add a 'lastUpdated' field to keep a record of when rates were changed
+        await db.collection(SETTINGS_COLLECTION).doc(NSA_RULES_DOC_ID).set({ 
+            rules: rules,
+            lastUpdated: new Date().toISOString(),
+            updatedBy: "Admin" // Optional: track who made the change
+        });
+        
+        console.log("NSA Rules successfully synced to Database.");
         return true;
     } catch (error) {
-        console.error("Error saving NSA rules:", error);
+        // Log detailed error for debugging
+        console.error("Critical Error: Unable to save NSA rules to Firestore:", error);
         return false;
     }
 }
@@ -2018,25 +2257,58 @@ async function renderNsaRules() {
 }
 
 async function saveNsaRules() {
+    const saveBtn = document.querySelector('button[onclick="saveNsaRules()"]');
+    const originalContent = saveBtn.innerHTML;
     const newRules = {};
-    const defaultRules = DEFAULT_NSA_RULES; // Use default as template for keys
-    let success = true;
+    const defaultRules = DEFAULT_NSA_RULES; 
 
+    // 1. Show Branded Loading State
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        Syncing Rules...`;
+
+    // 2. Data Collection Logic
     for (const key in defaultRules) {
         const input = document.getElementById(`nsa_${key}`);
-        const amount = parseInt(input.value) || 0;
-
-        newRules[key] = {
-            name: defaultRules[key].name, 
-            amount: Math.max(0, amount) 
-        };
+        if (input) {
+            const amount = parseInt(input.value) || 0;
+            newRules[key] = {
+                name: defaultRules[key].name, 
+                amount: Math.max(0, amount) 
+            };
+        }
     }
 
-    if (await saveNsaRulesToDB(newRules)) {
-        alert('NSA Rules saved successfully!');
-        await renderEmployees(currentPage, document.getElementById('employeeSearch').value);
+    // 3. Database Execution
+    const isSaved = await saveNsaRulesToDB(newRules);
+
+    if (isSaved) {
+        // 4. Success State Feedback (DealerOn Success Green)
+        saveBtn.style.backgroundColor = "#198754"; 
+        saveBtn.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>Rules Applied Successfully`;
+
+        // Refresh UI (Optional: only if rules change calculations on current view)
+        const searchVal = document.getElementById('employeeSearch')?.value || "";
+        await renderEmployees(currentPage, searchVal);
+
+        // Reset button after 2.5 seconds
+        setTimeout(() => {
+            saveBtn.disabled = false;
+            saveBtn.style.backgroundColor = "#002147"; // Back to Navy
+            saveBtn.innerHTML = originalContent;
+        }, 2500);
+
     } else {
-        alert('Failed to save NSA Rules.');
+        // 5. Error State Feedback
+        saveBtn.classList.replace('btn-primary', 'btn-danger');
+        saveBtn.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>Save Failed`;
+        
+        setTimeout(() => {
+            saveBtn.disabled = false;
+            saveBtn.classList.replace('btn-danger', 'btn-primary');
+            saveBtn.innerHTML = originalContent;
+        }, 3000);
     }
 }
 
@@ -2088,27 +2360,80 @@ async function deleteHoliday(dateToDelete) {
     }
 }
 
+let holidayCurrentPage = 1;
+const holidayItemsPerPage = 4;
+
 async function renderHolidaysList() {
     const listContainer = document.getElementById('holidaysList');
-    listContainer.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Loading holidays...</td></tr>';
+    const pageInfo = document.getElementById('holidayPageInfo');
+    const totalBadge = document.getElementById('holidayTotalCount');
+    const currentPageLabel = document.getElementById('currentHolidayPage');
+
+    // Show loading state
+    listContainer.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading holidays...</td></tr>';
     
+    // Fetch data
     const holidays = await getHolidaysFromDB();
 
+    // 1. Sort by date (ascending)
+    holidays.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const totalItems = holidays.length;
+    const totalPages = Math.ceil(totalItems / holidayItemsPerPage) || 1;
+    
+    // 2. Bound current page
+    if (holidayCurrentPage > totalPages) holidayCurrentPage = totalPages;
+    if (holidayCurrentPage < 1) holidayCurrentPage = 1;
+
+    // 3. Calculate pagination slice
+    const start = (holidayCurrentPage - 1) * holidayItemsPerPage;
+    const end = start + holidayItemsPerPage;
+    const paginatedItems = holidays.slice(start, end);
+
+    // 4. Update Header and Footer UI
+    if (totalBadge) totalBadge.innerText = `${totalItems} Holidays Total`;
+    if (pageInfo) pageInfo.innerText = totalItems > 0 
+        ? `Showing ${start + 1}-${Math.min(end, totalItems)} of ${totalItems}`
+        : "No holidays found";
+    if (currentPageLabel) currentPageLabel.innerText = holidayCurrentPage;
+
+    // 5. Render rows
     listContainer.innerHTML = '';
     
-    holidays.forEach(holiday => {
+    if (paginatedItems.length === 0) {
+        listContainer.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted italic">No holidays added yet.</td></tr>';
+        return;
+    }
+
+    paginatedItems.forEach(holiday => {
         const tr = document.createElement('tr');
+        // Added styling to match the premium DealerOn look
         tr.innerHTML = `
-            <td>${holiday.date}</td>
-            <td>${holiday.name || '-'}</td>
-            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteHoliday('${holiday.date}')">Delete</button></td>
+            <td class="ps-3 fw-bold" style="color: #002147;">${holiday.date}</td>
+            <td>
+                <span class="badge bg-light text-dark border fw-normal py-2 px-3">
+                    ${holiday.name || 'Public Holiday'}
+                </span>
+            </td>
+            <td class="pe-3 text-end">
+                <button class="btn btn-sm btn-outline-danger border-0" 
+                        title="Delete Holiday"
+                        onclick="deleteHoliday('${holiday.date}')">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </td>
         `;
         listContainer.appendChild(tr);
     });
-    
-    if (holidays.length === 0) {
-        listContainer.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No holidays added.</td></tr>';
-    }
+}
+
+/**
+ * Pagination Controller
+ * @param {number} direction - 1 for next, -1 for previous
+ */
+function changeHolidayPage(direction) {
+    holidayCurrentPage += direction;
+    renderHolidaysList();
 }
 
 
@@ -2230,21 +2555,63 @@ async function getDailyNsaInfo(emp, date) {
  *********************/
 function renderSummaryPagination(containerId, totalPages, currentPage, renderFn, pageVarName, params='') {
   const container = document.getElementById(containerId);
+  if (!container) return;
   container.innerHTML = '';
   
   if (totalPages <= 1) return; 
 
-  for (let i = 1; i <= totalPages; i++) {
-    const li = document.createElement('li');
-    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-    
-    const call = params 
-      ? `${pageVarName} = ${i}; ${renderFn}(${params}); return false;`
-      : `${pageVarName} = ${i}; ${renderFn}(); return false;`;
+  // Helper to construct the function call string
+  const getCall = (pageNum) => {
+    return params 
+      ? `${pageVarName} = ${pageNum}; ${renderFn}(${params}); return false;`
+      : `${pageVarName} = ${pageNum}; ${renderFn}(${pageNum}); return false;`;
+  };
 
-    li.innerHTML = `<a class="page-link" href="#" onclick="${call}">${i}</a>`;
+  // --- 1. PREVIOUS ARROW ---
+  const prevLi = document.createElement('li');
+  const isFirst = currentPage === 1;
+  prevLi.className = `page-item ${isFirst ? 'disabled' : ''} ms-1`;
+  prevLi.innerHTML = `
+    <a class="page-link shadow-sm fw-bold rounded border-0" 
+       href="#" 
+       onclick="${!isFirst ? getCall(currentPage - 1) : 'return false;'}"
+       style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background-color: #ffffff; color: #002147; border: 1px solid #dee2e6 !important; opacity: ${isFirst ? '0.5' : '1'};">
+       <i class="bi bi-chevron-left"></i>
+    </a>`;
+  container.appendChild(prevLi);
+
+  // --- 2. NUMBERED PAGES ---
+  for (let i = 1; i <= totalPages; i++) {
+    const isActive = i === currentPage;
+    const li = document.createElement('li');
+    li.className = `page-item ${isActive ? 'active' : ''} ms-1`;
+    
+    li.innerHTML = `
+      <a class="page-link shadow-sm fw-bold rounded border-0" 
+         href="#" 
+         onclick="${getCall(i)}"
+         style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+         ${isActive 
+            ? 'background-color: #FF8C00 !important; color: white !important;' 
+            : 'background-color: #ffffff; color: #002147; border: 1px solid #dee2e6 !important;'
+         }">
+         ${i}
+      </a>`;
     container.appendChild(li);
   }
+
+  // --- 3. NEXT ARROW ---
+  const nextLi = document.createElement('li');
+  const isLast = currentPage === totalPages;
+  nextLi.className = `page-item ${isLast ? 'disabled' : ''} ms-1`;
+  nextLi.innerHTML = `
+    <a class="page-link shadow-sm fw-bold rounded border-0" 
+       href="#" 
+       onclick="${!isLast ? getCall(currentPage + 1) : 'return false;'}"
+       style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background-color: #ffffff; color: #002147; border: 1px solid #dee2e6 !important; opacity: ${isLast ? '0.5' : '1'};">
+       <i class="bi bi-chevron-right"></i>
+    </a>`;
+  container.appendChild(nextLi);
 }
 
 function exportIndividualExcel() {
@@ -2293,11 +2660,15 @@ let selectedEmployeeIds = new Set();
 
 async function renderEmployees(page = currentPage, filter = '') {
     const tbody = document.querySelector('#employeeTable tbody');
+    const pageInfo = document.getElementById('empPageInfo');
+    const totalCount = document.getElementById('empTotalCounter');
+    
     if (!tbody) return; 
+
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2" style="color: #002147;"></div>Syncing Records...</td></tr>';
     
     const allEmployees = await getEmployeesFromDB();
 
-    // 2. Filter & Sort Logic
     const deptFilter = document.getElementById('departmentFilter')?.value || '';
     const searchTerm = filter.toLowerCase();
 
@@ -2308,83 +2679,58 @@ async function renderEmployees(page = currentPage, filter = '') {
         return matchesText && matchesDept;
     }).sort((a, b) => (a.id || "").localeCompare(b.id || ""));
 
-    // 3. Pagination calculation
-    const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / ROWS_PER_PAGE) || 1;
     currentPage = Math.min(page, totalPages) || 1;
     const start = (currentPage - 1) * ROWS_PER_PAGE;
-    const paginated = filtered.slice(start, start + ROWS_PER_PAGE);
+    const end = start + ROWS_PER_PAGE;
+    const paginated = filtered.slice(start, end);
 
-    // 4. RENDERING
+    if (totalCount) totalCount.innerText = `Total: ${allEmployees.length} Employees`;
+    if (pageInfo) pageInfo.innerText = totalItems > 0 
+        ? `Showing ${start + 1}-${Math.min(end, totalItems)} of ${totalItems}`
+        : "No records found";
+
     const fragment = document.createDocumentFragment();
 
     if (paginated.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center py-5">
-                    <i class="bi bi-search text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
-                    <h5 class="text-muted fw-bold">No Employees Found</h5>
-                    <p class="small text-secondary">Try adjusting your search or filters.</p>
-                </td>
-            </tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5"><h5 class="text-muted fw-bold">No Records Found</h5></td></tr>`;
         renderPagination(0);
         return;
     }
 
     paginated.forEach(emp => {
         const tr = document.createElement('tr');
-        const isChecked = selectedEmployeeIds.has(emp.id) ? 'checked' : '';
+        tr.className = "align-middle";
         
-        // --- STATUS PILL LOGIC ---
-        const statusValue = emp.status || 'Active';
-        const statusClass = statusValue === 'Active' ? 'pill-active' : 'pill-inactive';
-
-        // --- SHIFT BADGE LOGIC ---
         const rawShift = (emp.shift || 'N/A').toUpperCase();
-        let shiftClass = 'shift-other'; 
+        let shiftStyle = 'background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;'; 
+        
         if (rawShift.includes('MORNING')) {
-            shiftClass = 'shift-morning';
+            shiftStyle = 'background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA;'; 
         } else if (rawShift.includes('NIGHT')) {
-            shiftClass = 'shift-night';
+            shiftStyle = 'background-color: #E2E3E5; color: #002147; border: 1px solid #D6D8DB;';
         }
 
-        // --- NEW: DEPARTMENT COLOR LOGIC ---
         const deptValue = (emp.department || 'Other');
-        let deptClass = 'dept-default';
-        const lowerDept = deptValue.toLowerCase();
-        
-        if (lowerDept.includes('design')) deptClass = 'dept-design';
-        else if (lowerDept.includes('sales')) deptClass = 'dept-sales';
-        else if (lowerDept.includes('hr') || lowerDept.includes('human')) deptClass = 'dept-hr';
-        else if (lowerDept.includes('tech') || lowerDept.includes('it')) deptClass = 'dept-tech';
+        const statusValue = emp.status || 'Active';
+        const isChecked = selectedEmployeeIds.has(emp.id) ? 'checked' : '';
 
+        // FIXED: Added 'emp-checkbox' class to the input below
         tr.innerHTML = `
             <td class="ps-3">
-                <input type="checkbox" class="form-check-input emp-checkbox shadow-sm" 
-                    value="${emp.id}" ${isChecked} 
-                    onchange="toggleEmpSelect('${emp.id}')">
+                <input type="checkbox" class="form-check-input emp-checkbox border-2" 
+                    value="${emp.id}" ${isChecked} onchange="toggleEmpSelect('${emp.id}')">
             </td>
-            <td><span class="fw-bold text-navy">${emp.id}</span></td>
-            <td>${emp.name}</td>
-            <td>
-                <span class="dept-badge ${deptClass}">${deptValue}</span>
-            </td>
-            <td>
-                <span class="shift-badge ${shiftClass}">${rawShift}</span>
-            </td>
-            <td>
-                <span class="status-pill ${statusClass}">${statusValue}</span>
-            </td>
+            <td><span class="fw-bold" style="color: #002147;">${emp.id}</span></td>
+            <td><div class="fw-bold mb-0">${emp.name}</div><small class="text-muted">DealerOn Associate</small></td>
+            <td><span class="badge border bg-light text-dark fw-normal px-3 py-2">${deptValue}</span></td>
+            <td><span class="badge px-3 py-2 fw-bold" style="${shiftStyle}"><i class="bi bi-clock me-1"></i>${rawShift}</span></td>
+            <td><span class="badge rounded-pill fw-bold ${statusValue === 'Active' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}" style="padding: 0.5em 1em;">● ${statusValue}</span></td>
             <td class="text-end pe-3">
-                <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-sm btn-outline-info border-0" onclick="viewEmployeeHistory('${emp.id}')" title="History">
-                        <i class="bi bi-clock-history"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-primary border-0" onclick="editEmployee('${emp.id}')" title="Edit">
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteEmployee('${emp.id}')" title="Delete">
-                        <i class="bi bi-trash3"></i>
-                    </button>
+                <div class="btn-group shadow-sm bg-white rounded">
+                    <button class="btn btn-sm btn-outline-navy border-0 py-2 px-2" style="margin: 2px;" onclick="viewEmployeeHistory('${emp.id}')"><i class="bi bi-clock-history"></i></button>
+                    <button class="btn btn-sm btn-outline-navy border-0 py-2 px-2" style="margin: 2px;" onclick="editEmployee('${emp.id}')"><i class="bi bi-pencil-square"></i></button>
                 </div>
             </td>`;
         fragment.appendChild(tr);
@@ -2394,6 +2740,14 @@ async function renderEmployees(page = currentPage, filter = '') {
     tbody.appendChild(fragment);
     renderPagination(totalPages);
 }
+/**
+ * Pagination Page Change Handler
+ */
+function changeEmployeePage(direction) {
+    const nextSearch = document.getElementById('employeeSearchInput')?.value || '';
+    currentPage += direction;
+    renderEmployees(currentPage, nextSearch);
+}
 // Checkbox Logic
 function toggleEmpSelect(id) {
     if (selectedEmployeeIds.has(id)) selectedEmployeeIds.delete(id);
@@ -2401,11 +2755,16 @@ function toggleEmpSelect(id) {
 }
 
 function toggleSelectAll(masterCheckbox) {
-    const checkboxes = document.querySelectorAll('.emp-checkbox');
+    // We target the specific class 'emp-checkbox' inside the table body
+    const checkboxes = document.querySelectorAll('#employeeTable tbody .emp-checkbox');
+    
     checkboxes.forEach(cb => {
         cb.checked = masterCheckbox.checked;
-        if (masterCheckbox.checked) selectedEmployeeIds.add(cb.value);
-        else selectedEmployeeIds.delete(cb.value);
+        if (masterCheckbox.checked) {
+            selectedEmployeeIds.add(cb.value);
+        } else {
+            selectedEmployeeIds.delete(cb.value);
+        }
     });
 }
 
@@ -2414,26 +2773,55 @@ function filterEmployees() {
 }
 
 function renderPagination(totalPages) {
-  const container = document.getElementById('employeePagination');
-  if (!container) return;
-  
-  container.innerHTML = '';
-  
-  for (let i = 1; i <= totalPages; i++) {
-    const li = document.createElement('li');
-    // Highlight the active page
-    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-    
-    // Fix: We call a dedicated function and pass 'i'
-    li.innerHTML = `
-      <a class="page-link" 
-         href="javascript:void(0)" 
-         onclick="handlePageClick(event, ${i})">
-         ${i}
-      </a>`;
-      
-    container.appendChild(li);
-  }
+    const container = document.getElementById('employeePagination');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    // 1. Previous Button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `
+        <a class="page-link rounded border-0 fw-bold me-1" 
+           href="javascript:void(0)" 
+           onclick="handlePageClick(event, ${currentPage - 1})"
+           style="color: #002147; background: #f8f9fa;">
+           <i class="bi bi-chevron-left"></i>
+        </a>`;
+    container.appendChild(prevLi);
+
+    // 2. Page Numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement('li');
+        const isActive = i === currentPage;
+        
+        li.className = `page-item ${isActive ? 'active' : ''}`;
+        
+        // Inline styles to force DealerOn Orange for Active and Navy for others
+        li.innerHTML = `
+            <a class="page-link rounded border-0 fw-bold mx-1 shadow-sm" 
+               href="javascript:void(0)" 
+               onclick="handlePageClick(event, ${i})"
+               style="${isActive 
+                        ? 'background-color: #FF8C00 !important; color: white; border-color: #FF8C00 !important;' 
+                        : 'color: #002147; background: white;'}">
+               ${i}
+            </a>`;
+        
+        container.appendChild(li);
+    }
+
+    // 3. Next Button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `
+        <a class="page-link rounded border-0 fw-bold ms-1" 
+           href="javascript:void(0)" 
+           onclick="handlePageClick(event, ${currentPage + 1})"
+           style="color: #002147; background: #f8f9fa;">
+           <i class="bi bi-chevron-right"></i>
+        </a>`;
+    container.appendChild(nextLi);
 }
 
 // Add this helper function to manage the state correctly
@@ -2652,29 +3040,27 @@ async function deleteEmployee(id) {
     const success = await deleteEmployeeFromDB(id);
     
     if (success) {
-        // --- THE MISSING STEP: CLEAR LOCAL DATA ---
-        // Search your code for the variable that stores ALL attendance data.
-        // It's likely called 'allAttendance' or similar. 
+        // 1. Clear local memory
         if (typeof allAttendance !== 'undefined') {
             allAttendance = allAttendance.filter(rec => rec.empId !== id);
-            console.log("Local memory cleared for ID:", id);
         }
 
-        // Reset UI Selection
-        const empSelect = document.getElementById('attendanceEmployee');
-        if (empSelect.value === id) {
-            empSelect.value = "";
-            if (typeof selectedDates !== 'undefined') selectedDates = [];
-        }
+        // 2. Remove from selection set if it was checked
+        selectedEmployeeIds.delete(id);
 
-        // Refresh Lists and UI
-        await renderEmployees();
+        // 3. REFRESH EVERYTHING (Matches your Bulk Delete logic)
+        await renderEmployees(currentPage); 
+        await populateDepartmentFilter();
+        await populateAttendanceEmployees(); 
         
-        // This is crucial: Redraw the calendar while the ID is empty 
-        // to force the UI to reset its internal state.
-        renderCalendar(); 
+        // 4. Reset Select All checkbox state
+        const selectAllHeader = document.getElementById('selectAllHeader');
+        if (selectAllHeader) selectAllHeader.checked = false;
+
+        // 5. Force UI updates
+        if (typeof renderCalendar === 'function') renderCalendar();
         
-        alert("Employee and history fully wiped from Database and Memory.");
+        alert("Employee and history removed successfully.");
     }
 }
 
@@ -3651,90 +4037,120 @@ async function renderDepartmentSummary(month) {
 }
 
 async function renderDeptMonthlySummary() {
-  const dept = document.getElementById('deptSummaryDept').value;
-  const month = document.getElementById('deptSummaryMonth').value;
-  if(!dept || !month) { 
-    alert('Select department and month'); 
-    return; 
-  }
-  
-  deptMonthlySummaryPage = 1; 
-  await renderDeptMonthlySummaryPage(dept, month);
+    const dept = document.getElementById('deptSummaryDept').value;
+    const month = document.getElementById('deptSummaryMonth').value;
+    
+    if(!dept || !month) { 
+        alert('Please select both Department and Month to generate the breakdown.'); 
+        return; 
+    }
+    
+    deptMonthlySummaryPage = 1; 
+    await renderDeptMonthlySummaryPage(dept, month);
 }
 
 async function renderDeptMonthlySummaryPage(dept, month) {
-  const tbody = document.querySelector('#deptMonthlySummary tbody');
-  // Updated colspan to 12 to account for COFF and FH
-  tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Generating breakdown...</td></tr>';
+    const tbody = document.querySelector('#deptMonthlySummary tbody');
+    const pageInfo = document.getElementById('deptPageInfo');
+    
+    // 1. Show DealerOn Branded Loading State
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="12" class="text-center py-5 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" style="color: #002147;"></div>
+                Generating Departmental Breakdown...
+            </td>
+        </tr>`;
 
-  const allEmployees = await getEmployeesFromDB();
-  const reportData = [];
+    const allEmployees = await getEmployeesFromDB();
+    const reportData = [];
 
-  const filteredEmployees = allEmployees
-    .filter(emp => emp.department === dept && emp.status === 'Active');
-  
-  for (const emp of filteredEmployees) {
-      const report = await getMonthlyReportData(emp, month);
-      // Destructure fixedHolidaysCount from the updated report engine
-      const { leaves, fixedHolidaysCount, finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount } = report;
+    // Filter only Active employees for the specific department
+    const filteredEmployees = allEmployees.filter(emp => emp.department === dept && emp.status === 'Active');
+    
+    for (const emp of filteredEmployees) {
+        const report = await getMonthlyReportData(emp, month);
+        const { leaves, fixedHolidaysCount, finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount } = report;
 
-      if (validWorkingDaysCount === 0) continue; 
+        if (validWorkingDaysCount === 0) continue; 
 
-      if(finalPresentDays > 0 || Object.values(leaves).some(l => l > 0) || fixedHolidaysCount > 0) {
-          reportData.push({ 
-            emp, 
-            finalPresentDays, 
-            leaves, 
-            fixedHolidaysCount, 
-            nsaAmount: totalNsaAmount, 
-            breakdown: shiftBreakdown 
-          });
-      }
-  }
+        if(finalPresentDays > 0 || Object.values(leaves).some(l => l > 0) || fixedHolidaysCount > 0) {
+            reportData.push({ 
+                emp, 
+                finalPresentDays, 
+                leaves, 
+                fixedHolidaysCount, 
+                nsaAmount: totalNsaAmount, 
+                breakdown: shiftBreakdown 
+            });
+        }
+    }
 
-  const totalPages = Math.ceil(reportData.length / ROWS_PER_PAGE);
-  deptMonthlySummaryPage = Math.min(deptMonthlySummaryPage, totalPages) || 1;
+    // 2. Pagination Calculation
+    const totalPages = Math.ceil(reportData.length / ROWS_PER_PAGE) || 1;
+    deptMonthlySummaryPage = Math.min(deptMonthlySummaryPage, totalPages) || 1;
+    const start = (deptMonthlySummaryPage - 1) * ROWS_PER_PAGE;
+    const paginatedItems = reportData.slice(start, start + ROWS_PER_PAGE);
 
-  const start = (deptMonthlySummaryPage - 1) * ROWS_PER_PAGE;
-  
-  tbody.innerHTML = '';
+    // Update Footer Info Label
+    if (pageInfo) {
+        pageInfo.innerText = reportData.length > 0 
+            ? `Showing ${start + 1}-${Math.min(start + ROWS_PER_PAGE, reportData.length)} of ${reportData.length} records`
+            : "No records found";
+    }
 
-  if (reportData.length === 0) {
-       tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">No attendance data or NSA recorded for this department this month.</td></tr>';
-       document.getElementById('deptMonthlySummaryPagination').innerHTML = '';
-       document.getElementById('backDeptSummaryBtn').classList.remove('d-none');
-       return;
-  }
+    tbody.innerHTML = '';
 
-  reportData.slice(start, start + ROWS_PER_PAGE).forEach(item => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${item.emp.name}</td>
-      <td>${item.finalPresentDays}</td>
-      <td>${item.breakdown.MORNING_8_5 || 0}</td>
-      <td>${item.breakdown.NIGHT_6_3 || 0}</td>
-      <td>${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
-      <td>${item.leaves.PL || 0}</td>
-      <td>${item.leaves.CL || 0}</td>
-      <td>${item.leaves.SL || 0}</td>
-      <td>${item.leaves.FL || 0}</td>
-      <td>${item.leaves.COFF || 0}</td> <td>${item.fixedHolidaysCount || 0}</td> <td>₹${item.nsaAmount}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+    if (reportData.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="12" class="text-center py-5">
+                    <h5 class="text-muted fw-bold">No Data Available</h5>
+                    <p class="small">No attendance or NSA recorded for ${dept} in ${month}.</p>
+                </td>
+            </tr>`;
+        document.getElementById('deptMonthlySummaryPagination').innerHTML = '';
+        document.getElementById('backDeptSummaryBtn').classList.remove('d-none');
+        return;
+    }
 
-  renderSummaryPagination(
-    'deptMonthlySummaryPagination', 
-    totalPages, 
-    deptMonthlySummaryPage, 
-    'renderDeptMonthlySummaryPage', 
-    'deptMonthlySummaryPage',
-    `'${dept}', '${month}'`
-  );
+    // 3. Rendering Table Rows
+    paginatedItems.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = "align-middle"; // Perfect vertical alignment
+        
+        tr.innerHTML = `
+            <td class="ps-3">
+                <div class="fw-bold" style="color: #002147;">${item.emp.name}</div>
+                <small class="text-muted" style="font-size: 0.7rem;">ID: ${item.emp.id}</small>
+            </td>
+            <td class="text-center fw-bold">${item.finalPresentDays}</td>
+            <td class="text-center">${item.breakdown.MORNING_8_5 || 0}</td>
+            <td class="text-center">${item.breakdown.NIGHT_6_3 || 0}</td>
+            <td class="text-center">${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
+            <td class="text-center text-primary fw-bold">${item.leaves.PL || 0}</td>
+            <td class="text-center text-primary fw-bold">${item.leaves.CL || 0}</td>
+            <td class="text-center text-primary fw-bold">${item.leaves.SL || 0}</td>
+            <td class="text-center text-primary fw-bold">${item.leaves.FL || 0}</td>
+            <td class="text-center" style="background-color: #f0f7ff; color: #002147; font-weight: 600;">${item.leaves.COFF || 0}</td> 
+            <td class="text-center" style="background-color: #fff9e6; color: #856404; font-weight: 600;">${item.fixedHolidaysCount || 0}</td> 
+            <td class="text-end pe-3 fw-bold text-success">₹${item.nsaAmount.toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+    });
 
-  document.getElementById('backDeptSummaryBtn').classList.remove('d-none');
+    // 4. Update Pagination UI
+    renderSummaryPagination(
+        'deptMonthlySummaryPagination', 
+        totalPages, 
+        deptMonthlySummaryPage, 
+        'renderDeptMonthlySummaryPage', 
+        'deptMonthlySummaryPage',
+        `'${dept}', '${month}'`
+    );
+
+    document.getElementById('backDeptSummaryBtn').classList.remove('d-none');
 }
-
 /*********************
  * YEARLY SUMMARY LOGIC
  *********************/
@@ -3856,44 +4272,105 @@ async function getYearlyReportData(year, deptFilter) {
     return reportData;
 }
 
-async function renderYearlySummary() {
-  const year = document.getElementById('yearlySummaryYear').value;
-  const deptFilter = document.getElementById('yearlySummaryDept').value;
-  const tbody = document.querySelector('#yearlySummaryResults tbody');
-  tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Generating yearly summary...</td></tr>';
+// Global variable for Yearly pagination
+let yearlySummaryPage = 1;
+const YEARLY_ROWS_PER_PAGE = 10;
 
-  if (!year || year.length !== 4) {
-    tbody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Please enter a valid 4-digit year.</td></tr>';
-    return;
-  }
-  
-  const reportData = await getYearlyReportData(year, deptFilter);
-  
-  tbody.innerHTML = '';
-  
-  if (reportData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No attendance data or NSA recorded for this group.</td></tr>';
-    return;
-  }
+async function renderYearlySummary(page = 1) {
+    const year = document.getElementById('yearlySummaryYear').value;
+    const deptFilter = document.getElementById('yearlySummaryDept').value;
+    const tbody = document.querySelector('#yearlySummaryResults tbody');
+    const pageInfo = document.getElementById('yearlyPageInfo');
+    const backBtn = document.getElementById('backYearlyBtn');
+    
+    // 1. DealerOn Loading State
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="11" class="text-center py-5 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" style="color: #002147;"></div>
+                Compiling Annual Records for ${year}...
+            </td>
+        </tr>`;
 
-  reportData.forEach(item => {
-    const totalLeaves = item.leaves.PL + item.leaves.CL + item.leaves.SL + item.leaves.FL;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${item.name}</td>
-      <td>${item.department}</td>
-      <td>${item.presentDays}</td>
-      <td>${item.yearlyBreakdown.MORNING_8_5}</td>
-      <td>${item.yearlyBreakdown.NIGHT_6_3}</td>
-      <td>${item.yearlyBreakdown.NIGHT_9_30_6_30}</td>
-      <td>${item.leaves.PL}</td>
-      <td>${item.leaves.CL}</td>
-      <td>${item.leaves.SL}</td>
-      <td>${item.leaves.FL}</td>
-      <td>₹${item.nsa}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+    // Validation
+    if (!year || year.length !== 4) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-danger py-4 fw-bold">Please enter a valid 4-digit year.</td></tr>';
+        return;
+    }
+    
+    yearlySummaryPage = page;
+    
+    // Fetch Data from your existing engine
+    const reportData = await getYearlyReportData(year, deptFilter);
+    
+    // 2. Pagination Logic
+    const totalItems = reportData.length;
+    const totalPages = Math.ceil(totalItems / YEARLY_ROWS_PER_PAGE) || 1;
+    const start = (yearlySummaryPage - 1) * YEARLY_ROWS_PER_PAGE;
+    const paginatedItems = reportData.slice(start, start + YEARLY_ROWS_PER_PAGE);
+
+    // Update Footer Label
+    if (pageInfo) {
+        pageInfo.innerText = totalItems > 0 
+            ? `Showing ${start + 1}-${Math.min(start + YEARLY_ROWS_PER_PAGE, totalItems)} of ${totalItems} Associates`
+            : "No records found";
+    }
+
+    tbody.innerHTML = '';
+    
+    // Handle Empty Results
+    if (reportData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center py-5 text-muted">No attendance data or NSA recorded for this group.</td></tr>';
+        renderSummaryPagination('yearlySummaryPagination', 0, 1, 'renderYearlySummary', 'yearlySummaryPage');
+        if (backBtn) backBtn.classList.remove('d-none'); // Show reset even if empty
+        return;
+    }
+
+    // 3. Render Rows with DealerOn High-Contrast Styling
+    paginatedItems.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = "align-middle";
+        tr.innerHTML = `
+            <td class="ps-3 fw-bold" style="color: #002147;">${item.name}</td>
+            <td><span class="badge border bg-light text-dark fw-normal px-2 py-1">${item.department}</span></td>
+            <td class="text-center fw-bold">${item.presentDays}</td>
+            <td class="text-center">${item.yearlyBreakdown.MORNING_8_5 || 0}</td>
+            <td class="text-center">${item.yearlyBreakdown.NIGHT_6_3 || 0}</td>
+            <td class="text-center">${item.yearlyBreakdown.NIGHT_9_30_6_30 || 0}</td>
+            <td class="text-center text-primary fw-bold">${item.leaves.PL || 0}</td>
+            <td class="text-center text-primary fw-bold">${item.leaves.CL || 0}</td>
+            <td class="text-center text-primary fw-bold">${item.leaves.SL || 0}</td>
+            <td class="text-center text-primary fw-bold">${item.leaves.FL || 0}</td>
+            <td class="text-end pe-3 fw-bold text-success">₹${item.nsa.toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // 4. UI Polish: Show Reset Button & Update Pagination
+    if (backBtn) backBtn.classList.remove('d-none');
+
+    renderSummaryPagination(
+        'yearlySummaryPagination', 
+        totalPages, 
+        yearlySummaryPage, 
+        'renderYearlySummary', 
+        'yearlySummaryPage'
+    );
+}
+
+// 5. Associated Reset Function
+function resetYearlySummary() {
+    document.getElementById('yearlySummaryYear').value = "2025";
+    document.getElementById('yearlySummaryDept').value = "";
+    
+    const tbody = document.querySelector('#yearlySummaryResults tbody');
+    tbody.innerHTML = '<tr><td colspan="11" class="text-center py-5 text-muted">Select a year and click Generate.</td></tr>';
+    
+    document.getElementById('yearlySummaryPagination').innerHTML = '';
+    document.getElementById('yearlyPageInfo').innerText = 'Showing 0 of 0 records';
+    document.getElementById('backYearlyBtn').classList.add('d-none');
+    
+    yearlySummaryPage = 1;
 }
 
 /*********************
