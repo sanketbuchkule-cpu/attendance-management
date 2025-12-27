@@ -274,7 +274,6 @@ tbody tr:hover {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 20px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
@@ -411,6 +410,32 @@ tbody tr:hover {
     border-color: #f3f4f6;
 }
 
+/* Styling for the 'Visible' and 'Month (No Weekends)' buttons */
+.btn-outline-navy {
+    color: #002147;
+    border: 2px solid #002147 !important;
+    background-color: transparent;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-navy:hover {
+    background-color: #002147;
+    color: #ffffff;
+}
+
+/* Specific fix for the Month (No Weekends) button to make it look like a real button */
+#advancedBulkModal .btn-outline-primary {
+    border: 2px solid #002147 !important;
+    color: #002147 !important;
+    background-color: #f8f9fa;
+}
+
+#advancedBulkModal .btn-outline-primary:hover {
+    background-color: #e9ecef;
+    border-color: #002147 !important;
+}
+
 </style>
 </head>
 <body>
@@ -470,7 +495,7 @@ tbody tr:hover {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="clearForm()">Close</button>
-        <button type="button" class="btn btn-primary" onclick="saveEmployee()">Save Employee</button>
+        <button type="button" class="btn btn-primary" onclick="saveEmployee()"><i class="bi bi-plus-lg me-1"></i> Save Employee</button>
       </div>
     </div>
   </div>
@@ -478,49 +503,64 @@ tbody tr:hover {
 
 <div class="modal fade" id="individualYearlyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title">Individual Yearly Performance Audit</h5>
+                <h5 class="modal-title px-2">Individual Yearly Performance Audit</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Search Employee</label>
-                        <input type="text" id="individualSearchInput" class="form-control" placeholder="Type name or ID..." onkeyup="filterIndividualSearch()">
+            <div class="modal-body p-4">
+                <div class="row g-3 mb-4 align-items-end">
+                    <div class="col-md-5 position-relative">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Search Employee</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                            <input type="text" id="individualSearchInput" class="form-control" placeholder="Type name or ID..." onkeyup="filterIndividualSearch()">
+                        </div>
                         <div id="individualSearchResults" class="list-group position-absolute w-100 z-3 shadow" style="display:none; max-height: 200px; overflow-y: auto;"></div>
                         <input type="hidden" id="selectedIndividualId">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold">Select Year</label>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Select Year</label>
                         <input type="number" id="individualYearInput" class="form-control" value="2025">
                     </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button class="btn btn-primary w-100" onclick="generateIndividualYearlyData()">
-                            <i class="bi bi-search"></i> Generate Report
-                        </button>
-                        <button class="btn btn-success" onclick="exportIndividualExcel()">
-            <i class="bi bi-file-earmark-excel"></i> Excel
-        </button>
+
+                    <div class="col-md-5">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary d-flex align-items-center justify-content-center gap-2 flex-grow-1" 
+                                    style="height: 38px; white-space: nowrap;" 
+                                    onclick="generateIndividualYearlyData()">
+                                <i class="bi bi-search"></i> Generate Report
+                            </button>
+                            
+                            <button class="btn btn-success d-flex align-items-center justify-content-center gap-2" 
+                                    style="height: 38px; white-space: nowrap;" 
+                                    onclick="exportIndividualExcel()">
+                                <i class="bi bi-file-earmark-excel"></i> Excel
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <div id="individualReportContent" style="display:none;">
-                    <div class="alert alert-info d-flex justify-content-between align-items-center">
-                        <div>
-                            <h4 id="displayEmpName" class="mb-0"></h4>
-                            <small id="displayEmpDept" class="text-uppercase"></small>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge bg-primary fs-6" id="displayYearLabel"></span>
+                    <div class="card border-0 bg-light mb-4">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 id="displayEmpName" class="mb-0 fw-bold text-dark"></h4>
+                                <span id="displayEmpDept" class="badge bg-secondary-soft text-secondary text-uppercase mt-1"></span>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted small fw-bold text-uppercase">Audit Year</div>
+                                <span class="badge bg-primary fs-5 shadow-sm" id="displayYearLabel"></span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover align-middle">
-                            <thead class="table-light">
+                    <div class="table-responsive rounded-3 border shadow-sm">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Month</th>
+                                    <th class="ps-3">Month</th>
                                     <th class="text-center">Present</th>
                                     <th class="text-center">PL</th>
                                     <th class="text-center">CL</th>
@@ -528,11 +568,11 @@ tbody tr:hover {
                                     <th class="text-center">FL</th>
                                     <th class="text-center">COFF</th>
                                     <th class="text-center">Holidays</th>
-                                    <th class="text-end">NSA Total (₹)</th>
+                                    <th class="text-end pe-3">NSA Total (₹)</th>
                                 </tr>
                             </thead>
                             <tbody id="individualYearlyBody"></tbody>
-                            <tfoot class="table-dark" id="individualYearlyFooter"></tfoot>
+                            <tfoot class="table-dark border-top-0" id="individualYearlyFooter"></tfoot>
                         </table>
                     </div>
                 </div>
@@ -541,92 +581,151 @@ tbody tr:hover {
     </div>
 </div>
 
-<div class="modal fade" id="advancedBulkModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold">Advanced Bulk Attendance Tool</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="advancedBulkModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-navy text-white py-3" style="background-color: #002147;">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-layers-half me-2" style="color: #FF8C00;"></i>Advanced Bulk Attendance Tool
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-4 border-end">
-                        <h6 class="fw-bold">1. Select Employees</h6>
-                        <div class="d-flex gap-2 mb-2">
-                            <select class="form-select form-select-sm" id="bulkDeptFilter" onchange="filterBulkEmployeeList()">
-                                <option value="">All Departments</option>
-                            </select>
-                            <input type="text" class="form-control form-control-sm" id="bulkSearchEmp" placeholder="Search..." onkeyup="filterBulkEmployeeList()">
-                        </div>
-                        <div class="selected-preview mb-2 p-2 border rounded bg-light" style="min-height: 50px; max-height: 100px; overflow-y: auto;">
-                            <small class="text-muted d-block mb-1">Selected Preview:</small>
-                            <div id="bulkSelectedBadges"></div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small id="bulkSelectCount" class="fw-bold">0 total selected</small>
-                            <div>
-                                <button class="btn btn-xs btn-outline-secondary" onclick="selectVisibleBulk(true)">Select Visible</button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="clearAllSelectedEmployees()">Clear All</button>
-                            </div>
-                        </div>
-                        <div id="bulkEmployeeList" class="list-group border rounded" style="max-height: 300px; overflow-y: auto;">
-                            </div>
-                    </div>
-
-                    <div class="col-md-5 border-end">
-                        <h6 class="fw-bold">2. Select Dates</h6>
-                        <ul class="nav nav-pills nav-fill mb-3" id="dateTab" role="tablist">
-                            <li class="nav-item">
-                                <button class="nav-link active py-1" data-bs-toggle="pill" data-bs-target="#tabRange">Date Range</button>
-                            </li>
-                            <li class="nav-item">
-                                <button class="nav-link py-1" data-bs-toggle="pill" data-bs-target="#tabSpecific">Specific Dates</button>
-                            </li>
-                        </ul>
-                        <div class="tab-content mt-2">
-                            <div class="tab-pane fade show active" id="tabRange">
-                                <div class="row g-2">
+            
+            <div class="modal-body p-4 bg-light bg-opacity-50">
+                <div class="row g-4">
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm" style="border-top: 5px solid #FF8C00 !important;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold mb-0 text-navy">Select Employees</h6>
+                                    <span id="bulkSelectCount" class="badge rounded-pill" style="background-color: #002147;">0 Selected</span>
+                                </div>
+                                
+                                <div class="row g-2 mb-3">
                                     <div class="col-6">
-                                        <label class="small">From</label>
-                                        <input type="date" class="form-control" id="bulkDateFrom">
+                                        <select class="form-select form-select-sm border-1" id="bulkDeptFilter" onchange="filterBulkEmployeeList()">
+                                            <option value="">All Depts</option>
+                                        </select>
                                     </div>
                                     <div class="col-6">
-                                        <label class="small">To</label>
-                                        <input type="date" class="form-control" id="bulkDateTo">
+                                        <input type="text" class="form-control form-control-sm border-1" id="bulkSearchEmp" placeholder="Search..." onkeyup="filterBulkEmployeeList()">
+                                    </div>
+                                </div>
+
+                                <div class="selected-preview mb-3 p-2 border rounded bg-white" style="min-height: 60px; max-height: 80px; overflow-y: auto;">
+                                    <div id="bulkSelectedBadges" class="d-flex flex-wrap gap-1">
+                                        <small class="text-muted italic">No employees selected</small>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between gap-2 mb-3">
+                                    <button class="btn btn-sm btn-outline-navy flex-grow-1 fw-bold" style="border: 2px solid #002147;" onclick="selectVisibleBulk(true)">
+                                        <i class="bi bi-check2-all"></i> Visible
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger flex-grow-1 fw-bold" style="border: 2px solid #dc3545;" onclick="clearAllSelectedEmployees()">
+                                        <i class="bi bi-x-circle"></i> Clear
+                                    </button>
+                                </div>
+
+                                <div id="bulkEmployeeList" class="list-group list-group-flush border rounded overflow-auto mb-2" style="max-height: 252px;">
+                                    </div>
+                                
+                                <div id="bulkPagination" class="d-flex justify-content-center"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="card h-100 border-0 shadow-sm" style="border-top: 5px solid #FF8C00 !important;">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-3 text-navy">Select Dates</h6>
+                                
+                                <ul class="nav nav-pills nav-fill mb-3 bg-light p-1 rounded" id="dateTab" role="tablist">
+                                    <li class="nav-item">
+                                        <button class="nav-link active py-1 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabRange">Date Range</button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link py-1 small fw-bold text-navy" data-bs-toggle="pill" data-bs-target="#tabSpecific">Specific Dates</button>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content">
+                                    <div class="tab-pane fade show active" id="tabRange">
+                                        <div class="p-3 border rounded bg-white">
+                                            <div class="row g-3">
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold text-muted">From</label>
+                                                    <input type="date" class="form-control" id="bulkDateFrom">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold text-muted">To</label>
+                                                    <input type="date" class="form-control" id="bulkDateTo">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="tab-pane fade" id="tabSpecific">
+                                        <div class="input-group mb-2">
+                                            <input type="date" class="form-control" id="specificDatePicker">
+                                            <button class="btn text-white px-3" style="background-color: #002147;" onclick="addSpecificDate()">Add</button>
+                                        </div>
+                                        
+                                        <button class="btn btn-outline-navy btn-sm w-100 mb-2 fw-bold" style="border: 2px solid #002147;" onclick="addMonthNoWknd()">
+                                            <i class="bi bi-calendar-check me-1"></i> Month (No Weekends)
+                                        </button>
+                                        
+                                        <div id="specificDateList" class="border p-2 rounded bg-white shadow-inner" style="min-height: 120px; max-height: 160px; overflow-y: auto;"></div>
+                                        
+                                        <div class="text-end">
+                                            <button class="btn btn-link btn-sm text-danger text-decoration-none p-0" onclick="clearAllBulkDates()">Clear All</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="tab-pane fade" id="tabSpecific">
-    <div class="input-group mb-2">
-        <input type="date" class="form-control" id="specificDatePicker">
-        <button class="btn btn-dark" onclick="addSpecificDate()">Add</button>
-        <button class="btn btn-primary" onclick="addMonthNoWknd()">Month (No Wknd)</button>
-    </div>
-    
-    <div id="specificDateList" class="border p-2 rounded bg-light" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
-        </div>
-    
-    <div class="mt-2 text-start">
-        <button class="btn btn-link btn-sm text-danger p-0" onclick="clearAllBulkDates()">Clear All Dates</button>
-    </div>
-</div>
                         </div>
                     </div>
 
                     <div class="col-md-3">
-                        <h6 class="fw-bold">3. Attendance Action</h6>
-                        <select class="form-select mb-3" id="bulkActionType">
-    <option value="PRESENT">Mark PRESENT</option>
-    <option value="PL">Mark PL</option>
-    <option value="CL">Mark CL</option>
-    <option value="SL">Mark SL</option>
-    <option value="FL">Mark FL</option>
-    <option value="COFF">Mark COFF</option> <optgroup label="Shift Override" id="bulkShiftGroup"></optgroup>
-</select>
+                        <div class="card h-100 border-0 shadow-sm" style="border-top: 5px solid #FF8C00 !important;">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="badge me-2" style="background-color: #FF8C00;">3</span>
+                                    <h6 class="fw-bold mb-0 text-navy">Attendance Action</h6>
+                                </div>
+                                
+                                <div class="p-3 border rounded bg-white">
+                                    <label class="form-label small fw-bold text-muted">Set Status</label>
+                                    <select class="form-select form-select-lg mb-4 fw-bold" id="bulkActionType" style="font-size: 0.9rem; border-color: #dee2e6;">
+                                        <option value="PRESENT">Mark PRESENT</option>
+                                        <option value="PL">Mark PL</option>
+                                        <option value="CL">Mark CL</option>
+                                        <option value="SL">Mark SL</option>
+                                        <option value="FL">Mark FL</option>
+                                        <option value="COFF">Mark COFF</option> 
+                                        <optgroup label="Shift Override" id="bulkShiftGroup"></optgroup>
+                                    </select>
+                                    
+                                    <div class="d-flex gap-2 p-2 bg-light rounded border-start border-4 border-warning">
+                                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                        <small class="text-muted" style="font-size: 0.75rem;">Existing data for these dates will be overwritten.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
-            <button class="btn btn-warning w-100 py-3 fw-bold rounded-0" onclick="processBulkAttendance()">PROCESS BULK ATTENDANCE</button>
+            
+            <div class="p-0 border-top">
+                <button class="btn w-100 py-3 fw-bold rounded-0 d-flex align-items-center justify-content-center gap-2 fs-5 text-white" 
+                        style="background-color: #FF8C00;"
+                        onclick="processBulkAttendance()">
+                    <i class="bi bi-cloud-upload-fill"></i> PROCESS BULK ATTENDANCE
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -814,7 +913,7 @@ tbody tr:hover {
                 <div class="card-body">
                     <h4 class="mb-3">NSA Rules & Settings</h4>
                     <div id="nsaRulesContainer" class="row g-3"></div>
-                    <button class="btn btn-success mt-3" onclick="saveNsaRules()">Save NSA Rules</button>
+                    <button class="btn btn-success mt-3" onclick="saveNsaRules()"><i class="bi bi-plus-lg me-1"></i>Save NSA Rules</button>
                 </div>
             </div>
 
@@ -831,7 +930,7 @@ tbody tr:hover {
                             <input type="text" class="form-control" id="holidayName" placeholder="e.g., Independence Day">
                         </div>
                         <div class="col-md-4 d-flex align-items-end">
-                            <button class="btn btn-primary" data-tooltip="Save this date as a Public Holiday" onclick="addHoliday()">Add Holiday</button>
+                            <button class="btn btn-primary" data-tooltip="Save this date as a Public Holiday" onclick="addHoliday()"><i class="bi bi-plus-lg me-1"></i>Add Holiday</button>
                         </div>
                     </div>
                     <hr>
@@ -953,7 +1052,8 @@ tbody tr:hover {
         </nav>
     </div>
 </div>
-        </div> <div class="tab-pane fade" id="attendance-content" role="tabpanel" aria-labelledby="attendance-tab">
+        </div> 
+        <div class="tab-pane fade" id="attendance-content" role="tabpanel" aria-labelledby="attendance-tab">
             <div class="card mb-4">
                 <div class="card-body">
                     <h4 class="mb-3">Attendance Calendar</h4>
@@ -1004,7 +1104,9 @@ tbody tr:hover {
                     </div>
                 </div>
             </div>
-        </div> <div class="tab-pane fade" id="summary-content" role="tabpanel" aria-labelledby="summary-tab">
+        </div> 
+        
+        <div class="tab-pane fade" id="summary-content" role="tabpanel" aria-labelledby="summary-tab">
             
             <div class="card mb-4">
                 <div class="card-body">
@@ -1449,7 +1551,7 @@ function renderPaginationControls(totalPages) {
     controls.innerHTML = `
         <button class="btn btn-sm btn-outline-dark" ${currentBulkPage === 1 ? 'disabled' : ''} 
                 onclick="changeBulkPage(-1)">Prev</button>
-        <span class="small align-self-center">Page ${currentBulkPage} of ${totalPages}</span>
+        <span class="small align-self-center" style="margin: 5px;">Page ${currentBulkPage} of ${totalPages}</span>
         <button class="btn btn-sm btn-outline-dark" ${currentBulkPage === totalPages ? 'disabled' : ''} 
                 onclick="changeBulkPage(1)">Next</button>
     `;
@@ -2269,7 +2371,7 @@ async function renderEmployees(page = currentPage, filter = '') {
             <td>
                 <span class="shift-badge ${shiftClass}">${rawShift}</span>
             </td>
-            <td class="text-center">
+            <td>
                 <span class="status-pill ${statusClass}">${statusValue}</span>
             </td>
             <td class="text-end pe-3">
@@ -3854,8 +3956,8 @@ async function renderMonthlyBreakdown(reportData, year, deptFilter) {
         headerRow2.innerHTML += `
             <th>P(T)</th><th>${shiftCodes.MORNING_8_5}</th><th>${shiftCodes.NIGHT_6_3}</th><th>${shiftCodes.NIGHT_9_30_6_30}</th>
             <th>PL</th><th>CL</th><th>SL</th><th>FL</th>
-            <th class="table-info text-dark">COFF</th> 
-            <th class="table-warning text-dark">FH</th>
+            <th class="table-info">COFF</th> 
+            <th class="table-warning">FH</th>
             <th>NSA(₹)</th><th>W Days</th>`;
     }
 
