@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -17,134 +18,399 @@
   <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
 
  <style>
-    /* Global Background & Base Cards */
-    body { background: #f5f7fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .card { border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,.05); border: none; }
-    
-    /* Employee Table & Badges */
-    .badge-shift { font-size: .75rem; padding: 0.4em 0.8em; }
-    .btn-action { margin-right: 5px; }
-    #employeeSearch { max-width: 250px; }
+    /* --- DEALERON CORPORATE THEME VARIABLES --- */
+    :root {
+        --dealeron-navy: #002d5b;      /* Primary Corporate Blue */
+        --dealeron-blue: #0056b3;      /* Action Blue */
+        --dealeron-orange: #ff8c00;    /* Accent/Alert Orange */
+        --dealeron-bg: #f4f7f9;        /* Slate Background */
+        --dealeron-surface: #ffffff;
+        --dealeron-border: #e2e8f0;
+        --dealeron-text: #1e293b;
+    }
 
-    /* --- UPDATED CALENDAR UI GRID --- */
+    /* Global Background & Base Typography */
+    body { 
+        background: var(--dealeron-bg); 
+        font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; 
+        color: var(--dealeron-text);
+        line-height: 1.6;
+    }
+
+    /* --- ENHANCED CARDS --- */
+    .card { 
+        border-radius: 12px; 
+        box-shadow: 0 4px 15px rgba(0, 45, 91, 0.08); 
+        border: 1px solid var(--dealeron-border);
+        background: var(--dealeron-surface);
+        transition: transform 0.2s ease;
+    }
+    
+    .card-header {
+        background-color: var(--dealeron-navy);
+        color: white;
+        font-weight: 600;
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+    /* --- NAVIGATION & TABS --- */
+    .navbar {
+        background: var(--dealeron-navy) !important;
+        padding: 1rem 0;
+    }
+
+    .nav-tabs { border-bottom: 2px solid var(--dealeron-border); }
+    .nav-tabs .nav-link { 
+        color: #64748b; 
+        font-weight: 600; 
+        border: none; 
+        padding: 12px 24px; 
+        transition: 0.3s;
+    }
+    .nav-tabs .nav-link.active { 
+        color: var(--dealeron-navy) !important; 
+        border-bottom: 3px solid var(--dealeron-orange) !important; 
+        background: transparent; 
+    }
+
+    /* --- UPDATED CALENDAR UI --- */
     #calendar {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 10px;
-        padding: 10px;
+        gap: 12px;
+        padding: 15px;
+        background: white;
+        border-radius: 12px;
     }
     
-    .date-cell-container { padding: 0; }
-    
-    /* Full-Block Calendar Coloring */
     .date-cell {
-        min-height: 90px;
+        min-height: 100px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        border-radius: 12px;
-        transition: all 0.2s ease;
+        border-radius: 10px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
-        border: 1px solid #dee2e6;
+        border: 1px solid var(--dealeron-border);
         background-color: #fff;
-        text-align: center;
+        position: relative;
     }
 
+    .date-cell:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        z-index: 2;
+    }
 
-    /* Status-Based Block Colors */
-    .date-cell.bg-success { background-color: #d1e7dd !important; color: #0f5132 !important; border-color: #badbcc !important; }
-    .date-cell.bg-danger { background-color: #f8d7da !important; color: #842029 !important; border-color: #f5c2c7 !important; }
-    .date-cell.bg-info { background-color: #cff4fc !important; color: #055160 !important; border: 2px solid #0dcaf0 !important; }
+    /* Status-Based Block Colors (Dealeron Palette) */
+    .date-cell.bg-success { 
+        background-color: #ecfdf5 !important; 
+        color: #065f46 !important; 
+        border: 2px solid #10b981 !important; 
+    }
+    .date-cell.bg-danger { 
+        background-color: #fef2f2 !important; 
+        color: #991b1b !important; 
+        border: 2px solid #ef4444 !important; 
+    }
+    .date-cell.bg-info { 
+        background-color: #f0f9ff !important; 
+        color: #075985 !important; 
+        border: 2px solid var(--dealeron-blue) !important; 
+    }
     
-    /* Special Day Styling */
-    .date-cell.weekend { background-color: #f8f9fa; color: #6c757d; border-style: dashed; }
-    .date-cell.holiday { background-color: #fff3cd; color: #856404; border: 2px solid #ffeeba; }
-    .date-cell.tbh { background-color: #e9ecef !important; color: #adb5bd !important; cursor: not-allowed; opacity: 0.7; }
+    .date-cell.weekend { background-color: #f8fafc; color: #94a3b8; border-style: dashed; }
+    .date-cell.holiday { 
+        background-color: #fffbeb; 
+        color: #92400e; 
+        border: 2px solid var(--dealeron-orange) !important; 
+    }
     
-    /* Selection State */
     .date-cell.selected { 
-        border: 3px solid #ffc107 !important; 
-        box-shadow: 0 0 12px rgba(255, 193, 7, 0.4);
-        transform: scale(1.02);
+        border: 3px solid var(--dealeron-orange) !important; 
+        box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.2);
     }
 
-    .blank-cell { background-color: transparent; min-height: 90px; border: none; }
-
-    /* --- ADVANCED BULK TOOL UI --- */
-    .selected-preview {
-        background-color: #f8f9fa;
-        min-height: 60px;
-        border: 1px dashed #dee2e6;
-    }
-    
-    #bulkSelectedBadges .badge {
-        font-size: 0.8rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .cursor-pointer { cursor: pointer; }
-
-    /* Small helper for list items */
-    .bulk-emp-check { width: 1.2em; height: 1.2em; cursor: pointer; }
-    .btn-xs { padding: 0.1rem 0.4rem; font-size: 0.75rem; }
-
-    /* --- SEARCHABLE DROPDOWN STYLES --- */
-    .search-results-container {
-        position: absolute;
-        z-index: 1050;
-        width: 100%;
-        background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        max-height: 250px;
-        overflow-y: auto;
-        display: none;
-    }
-    
-    .search-item {
-        padding: 10px 15px;
-        cursor: pointer;
-        transition: background 0.2s;
-        border-bottom: 1px solid #f8f9fa;
-    }
-    
-    .search-item:hover { background-color: #f0f4ff; }
-
-    /* --- REPORTING & SUMMARY TABLES --- */
-    .monthly-breakdown-table th {
-        background-color: #0d6efd;
+    /* --- TABLES --- */
+    .table thead th {
+        background-color: var(--dealeron-navy);
         color: white;
-        text-align: center;
-        font-size: 0.85rem;
-        vertical-align: middle;
-        border: 1px solid #dee2e6;
-    }
-    
-    .total-row { font-weight: bold; background-color: #e9ecef; }
-    
-    .shift-breakdown-card {
-        background-color: #e3f2fd;
-        border: 1px solid #bbdefb;
-        border-left: 5px solid #0dcaf0;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 15px;
+        border: none;
     }
 
-    /* Tab Navigation Enhancements */
-    .nav-tabs .nav-link { color: #495057; font-weight: bold; border: none; padding: 12px 20px; }
-    .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background: transparent; }
+    .table tbody tr:hover {
+        background-color: rgba(0, 45, 91, 0.02) !important;
+    }
 
-    /* MOBILE RESPONSIVE FIXES (Only added this part) */
+    /* --- SUMMARY UI CARDS (Border-Start Method) --- */
+    .summary-card-present { border-left: 5px solid #10b981; }
+    .summary-card-leave { border-left: 5px solid var(--dealeron-blue); }
+    .summary-card-holiday { border-left: 5px solid var(--dealeron-orange); }
+
+    /* NSA Hero Card */
+    .nsa-total-card {
+        background: linear-gradient(135deg, var(--dealeron-navy) 0%, #004a99 100%);
+        color: white;
+        border: none;
+    }
+    .nsa-amount-text {
+        color: var(--dealeron-orange);
+        font-weight: 800;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* --- BUTTONS --- */
+    /* --- UNIFORM BUTTON STYLING --- */
+/* This targets all Bootstrap button variants to ensure they match perfectly */
+.btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-info, .btn-secondary {
+    padding: 10px 24px !important; /* Increased horizontal padding for a premium feel */
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Space between icon and text */
+    font-size: 0.95rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Hover Effects - Slight lift and shadow */
+.btn-primary:hover, .btn-success:hover, .btn-danger:hover, .btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    filter: brightness(90%); /* Slightly darkens on hover for feedback */
+}
+
+/* Specific Dealeron Primary Hover */
+.btn-primary:hover { background-color: var(--dealeron-navy) !important; }
+
+/* Active/Click effect */
+.btn-primary:active, .btn-success:active {
+    transform: translateY(0);
+}
+
+.search-wrapper {
+    position: relative;
+}
+.search-wrapper i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+#employeeSearch {
+    padding-left: 35px;
+    transition: all 0.3s ease;
+    border: 1.5px solid var(--dealeron-border);
+}
+#employeeSearch:focus {
+    width: 300px; /* Expands slightly when clicking */
+    border-color: var(--dealeron-orange);
+    box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.1);
+}
+
+    /* --- TOOLTIPS --- */
+    [data-tooltip] { position: relative; cursor: help; }
+    [data-tooltip]::before {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 130%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--dealeron-navy);
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: 0.3s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+    }
+    [data-tooltip]:hover::before { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(-5px); }
+
+    /* --- MOBILE RESPONSIVE --- */
     @media (max-width: 768px) {
-        #calendar { grid-template-columns: repeat(3, 1fr) !important; gap: 5px; }
-        #calendarHeaders { display: none; }
-        .date-cell { min-height: 70px; font-size: 0.8rem; }
-        .d-flex.gap-2.flex-wrap > button, .d-flex.gap-2.flex-wrap > .dropdown { flex: 1 1 45%; }
-        .modal-dialog { margin: 0.5rem; }
+        #calendar { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
+        .date-cell { min-height: 80px; }
+        .nsa-total-card .display-4 { font-size: 2rem; }
     }
-    
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--dealeron-bg); }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--dealeron-blue); }
+
+    /* Table row hover highlight */
+tbody tr:hover {
+  background-color: rgba(255, 140, 0, 0.05) !important; /* Very subtle Dealeron Accent orange */
+  cursor: pointer;
+}
+
+/* Custom scrollbar for better UI */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--dealeron-primary);
+  border-radius: 10px;
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    position: relative;
+}
+.status-active { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
+.status-inactive { background-color: #ef4444; }
+
+/* Subtle pulse animation for Active employees */
+.pulse {
+    animation: pulse-animation 2s infinite;
+}
+@keyframes pulse-animation {
+    0% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.4); }
+    100% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+}
+
+/* Status Pill Styling */
+.status-pill {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.02em;
+}
+
+/* Active State: Emerald Green */
+.pill-active {
+    background-color: #ecfdf5;
+    color: #059669;
+    border: 1px solid #d1fae5;
+}
+
+/* Inactive State: Rose Red */
+.pill-inactive {
+    background-color: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #ffe4e6;
+}
+
+/* Optional: Pulse dot for Active status */
+.pill-active::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    background-color: #10b981;
+    border-radius: 50%;
+}
+
+/* Enhanced Shift Badges */
+.shift-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-block;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+/* Morning Shift: Deep Azure Blue */
+.shift-morning {
+    background-color: #e0f2fe;
+    color: #0369a1; /* Darker blue for contrast */
+    border: 1px solid #bae6fd;
+}
+
+/* Night Shift: Deep Indigo/Purple */
+.shift-night {
+    background-color: #f5f3ff;
+    color: #5b21b6; /* Darker purple for contrast */
+    border: 1px solid #ddd6fe;
+}
+
+/* Evening/Other Shift: Slate Gray */
+.shift-other {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+/* Department Badge Base */
+.dept-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: inline-block;
+    border: 1px solid transparent;
+}
+
+/* Design: Soft Orange/Peach */
+.dept-design {
+    background-color: #fff7ed;
+    color: #c2410c;
+    border-color: #ffedd5;
+}
+
+/* Sales: Soft Green */
+.dept-sales {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border-color: #dcfce7;
+}
+
+/* HR: Soft Purple */
+.dept-hr {
+    background-color: #faf5ff;
+    color: #7e22ce;
+    border-color: #f3e8ff;
+}
+
+/* Tech/IT: Soft Blue-Grey */
+.dept-tech {
+    background-color: #f8fafc;
+    color: #334155;
+    border-color: #e2e8f0;
+}
+
+/* Default/Other: Standard Light */
+.dept-default {
+    background-color: #f9fafb;
+    color: #4b5563;
+    border-color: #f3f4f6;
+}
+
 </style>
 </head>
 <body>
@@ -279,7 +545,7 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold">Advanced Bulk Tool</h5>
+                <h5 class="modal-title fw-bold">Advanced Bulk Attendance Tool</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -519,20 +785,25 @@
 
     <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="management-tab" data-bs-toggle="tab" data-bs-target="#management-content" type="button" role="tab" aria-controls="management-content" aria-selected="true">
-                ⚙️ Management
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance-content" type="button" role="tab" aria-controls="attendance-content" aria-selected="false">
-                🗓️ Attendance Calendar
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-content" type="button" role="tab" aria-controls="summary-content" aria-selected="false" onclick="loadSummaryTabDefaults()">
-                📈 Reporting & Summary
-            </button>
-        </li>
+    <button class="nav-link active" id="management-tab" data-bs-toggle="tab" data-bs-target="#management-content" type="button" role="tab" aria-controls="management-content" aria-selected="true" 
+            data-tooltip="Manage Employees & App Settings">
+        ⚙️ Management
+    </button>
+</li>
+
+<li class="nav-item" role="presentation">
+    <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance-content" type="button" role="tab" aria-controls="attendance-content" aria-selected="false" 
+            data-tooltip="View & Mark Daily Attendance">
+        🗓️ Attendance Calendar
+    </button>
+</li>
+
+<li class="nav-item" role="presentation">
+    <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-content" type="button" role="tab" aria-controls="summary-content" aria-selected="false" onclick="loadSummaryTabDefaults()" 
+            data-tooltip="View NSA Reports & Monthly Totals">
+        📈 Reporting & Summary
+    </button>
+</li>
     </ul>
 
     <div class="tab-content" id="mainTabsContent">
@@ -560,7 +831,7 @@
                             <input type="text" class="form-control" id="holidayName" placeholder="e.g., Independence Day">
                         </div>
                         <div class="col-md-4 d-flex align-items-end">
-                            <button class="btn btn-primary" onclick="addHoliday()">Add Holiday</button>
+                            <button class="btn btn-primary" data-tooltip="Save this date as a Public Holiday" onclick="addHoliday()">Add Holiday</button>
                         </div>
                     </div>
                     <hr>
@@ -574,68 +845,114 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <h4 class="mb-0">Employee Management</h4>
-                <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#individualYearlyModal">
-    <i class="bi bi-person-badge"></i> Individual Yearly Audit
-</button>
-                    <button class="btn btn-warning fw-bold" onclick="openAdvancedBulkTool()">
-                        <i class="bi bi-layers-fill"></i> Advanced Bulk Tool
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div class="d-flex align-items-center">
+        <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+            <i class="bi bi-people-fill text-primary fs-4"></i>
+        </div>
+        <h4 class="mb-0 fw-bold text-navy">Employee Management</h4>
+    </div>
+    
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#employeeModal" onclick="clearForm()">
+            <i class="bi bi-plus-lg me-1"></i> Add Employee
+        </button>
+
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#individualYearlyModal">
+            <i class="bi bi-person-badge me-1"></i> Yearly Audit
+        </button>
+        
+        <button class="btn btn-warning fw-bold" onclick="openAdvancedBulkTool()">
+            <i class="bi bi-layers-fill me-1"></i> Advanced Bulk Attendance Tool
+        </button>
+
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="excelDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-file-earmark-excel me-1"></i> Bulk Actions
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="excelDropdown">
+                <li>
+                    <h6 class="dropdown-header">Import Options</h6>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#bulkEmployeeModal">
+                        <i class="bi bi-plus-square me-2 text-secondary"></i>+ Bulk Employee Add
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="document.getElementById('empExcelFile').click()">
+                        <i class="bi bi-cloud-upload me-2 text-success"></i>Import Bulk Excel
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <h6 class="dropdown-header">Resources</h6>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" id="downloadSampleExcel">
+                        <i class="bi bi-file-earmark-arrow-down me-2 text-info"></i>Sample Excel
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="empExcelFile" accept=".xlsx,.xls" style="display:none" onchange="handleExcelUpload(event)">
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="p-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-3">
+                    <select class="form-select" id="departmentFilter" onchange="filterEmployees()">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input class="form-control border-start-0" id="employeeSearch" placeholder="Search ID or Name..." oninput="filterEmployees()" />
+                    </div>
+                </div>
+                <div class="col-md-5 d-flex justify-content-md-end gap-2">
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedEmployees()">
+                        <i class="bi bi-trash me-1"></i> Delete Selected
                     </button>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#employeeModal" onclick="clearForm()">+ Add Employee</button>
-                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#bulkEmployeeModal">+ Bulk Add</button>
-                    <button id="downloadSampleExcel" class="btn btn-info">Sample Excel</button>
-                    <button class="btn btn-success" onclick="document.getElementById('empExcelFile').click()">Upload Excel</button>
+                    <button class="btn btn-dark btn-sm" onclick="deleteAllEmployees()">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Delete All
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <input type="file" id="empExcelFile" accept=".xlsx,.xls" style="display:none" onchange="handleExcelUpload(event)">
-
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="row mb-3 g-2 align-items-center">
-                        <div class="col-md-3">
-                            <select class="form-select" id="departmentFilter" onchange="filterEmployees()">
-                                <option value="">All Departments</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <input class="form-control" id="employeeSearch" placeholder="Search ID or Name..." oninput="filterEmployees()" />
-                        </div>
-                        <div class="col-md-5 d-flex justify-content-md-end gap-2">
-                            <button class="btn btn-outline-danger" onclick="deleteSelectedEmployees()">
-                                <i class="bi bi-trash"></i> Delete Selected
-                            </button>
-                            <button class="btn btn-dark" onclick="deleteAllEmployees()">
-                                <i class="bi bi-exclamation-triangle"></i> Delete All
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table align-middle" id="employeeTable">
-                            <thead>
-                                <tr>
-                                    <th style="width: 40px;">
-                                        <input type="checkbox" class="form-check-input" id="selectAllHeader" onclick="toggleSelectAll(this)">
-                                    </th>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Department</th>
-                                    <th>Shift</th>
-                                    <th>Status</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                        <nav class="mt-3">
-                            <ul class="pagination justify-content-center" id="employeePagination"></ul>
-                        </nav>
-                    </div>
-                </div>
-            </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="employeeTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th style="width: 50px;" class="ps-3">
+                            <input type="checkbox" class="form-check-input" id="selectAllHeader" onclick="toggleSelectAll(this)">
+                        </th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Shift</th>
+                        <th>Status</th>
+                        <th class="text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="card-footer bg-white border-top py-3">
+        <nav>
+            <ul class="pagination pagination-sm justify-content-center mb-0" id="employeePagination"></ul>
+        </nav>
+    </div>
+</div>
         </div> <div class="tab-pane fade" id="attendance-content" role="tabpanel" aria-labelledby="attendance-tab">
             <div class="card mb-4">
                 <div class="card-body">
@@ -1875,13 +2192,10 @@ let selectedEmployeeIds = new Set();
 async function renderEmployees(page = currentPage, filter = '') {
     const tbody = document.querySelector('#employeeTable tbody');
     if (!tbody) return; 
-
-    // 1. REMOVED: bulkEmployeeCache = []; 
-    // We now trust the real-time listener. This makes the function instant.
     
     const allEmployees = await getEmployeesFromDB();
 
-    // 2. Filter & Sort Logic (Fast local processing)
+    // 2. Filter & Sort Logic
     const deptFilter = document.getElementById('departmentFilter')?.value || '';
     const searchTerm = filter.toLowerCase();
 
@@ -1898,12 +2212,18 @@ async function renderEmployees(page = currentPage, filter = '') {
     const start = (currentPage - 1) * ROWS_PER_PAGE;
     const paginated = filtered.slice(start, start + ROWS_PER_PAGE);
 
-    // 4. HIGH-SPEED RENDERING: Use DocumentFragment
-    // This prevents the page from flickering or jumping while loading.
+    // 4. RENDERING
     const fragment = document.createDocumentFragment();
 
     if (paginated.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-4">No employees found.</td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <i class="bi bi-search text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <h5 class="text-muted fw-bold">No Employees Found</h5>
+                    <p class="small text-secondary">Try adjusting your search or filters.</p>
+                </td>
+            </tr>`;
         renderPagination(0);
         return;
     }
@@ -1911,43 +2231,67 @@ async function renderEmployees(page = currentPage, filter = '') {
     paginated.forEach(emp => {
         const tr = document.createElement('tr');
         const isChecked = selectedEmployeeIds.has(emp.id) ? 'checked' : '';
-        const statusClass = emp.status === 'Active' ? 'bg-success' : 'bg-secondary';
+        
+        // --- STATUS PILL LOGIC ---
+        const statusValue = emp.status || 'Active';
+        const statusClass = statusValue === 'Active' ? 'pill-active' : 'pill-inactive';
+
+        // --- SHIFT BADGE LOGIC ---
+        const rawShift = (emp.shift || 'N/A').toUpperCase();
+        let shiftClass = 'shift-other'; 
+        if (rawShift.includes('MORNING')) {
+            shiftClass = 'shift-morning';
+        } else if (rawShift.includes('NIGHT')) {
+            shiftClass = 'shift-night';
+        }
+
+        // --- NEW: DEPARTMENT COLOR LOGIC ---
+        const deptValue = (emp.department || 'Other');
+        let deptClass = 'dept-default';
+        const lowerDept = deptValue.toLowerCase();
+        
+        if (lowerDept.includes('design')) deptClass = 'dept-design';
+        else if (lowerDept.includes('sales')) deptClass = 'dept-sales';
+        else if (lowerDept.includes('hr') || lowerDept.includes('human')) deptClass = 'dept-hr';
+        else if (lowerDept.includes('tech') || lowerDept.includes('it')) deptClass = 'dept-tech';
 
         tr.innerHTML = `
-            <td>
-                <input type="checkbox" class="form-check-input emp-checkbox" 
+            <td class="ps-3">
+                <input type="checkbox" class="form-check-input emp-checkbox shadow-sm" 
                     value="${emp.id}" ${isChecked} 
                     onchange="toggleEmpSelect('${emp.id}')">
             </td>
-            <td><strong>${emp.id}</strong></td>
+            <td><span class="fw-bold text-navy">${emp.id}</span></td>
             <td>${emp.name}</td>
-            <td><span class="badge bg-light text-dark border">${emp.department}</span></td>
-            <td><span class="badge bg-info text-dark">${emp.shift || 'N/A'}</span></td>
-            <td><span class="badge ${statusClass}">${emp.status || 'Active'}</span></td>
-            <td class="text-end">
-                <div class="btn-group">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="viewEmployeeHistory('${emp.id}')">
-                        <i class="bi bi-clock-history"></i> History
+            <td>
+                <span class="dept-badge ${deptClass}">${deptValue}</span>
+            </td>
+            <td>
+                <span class="shift-badge ${shiftClass}">${rawShift}</span>
+            </td>
+            <td class="text-center">
+                <span class="status-pill ${statusClass}">${statusValue}</span>
+            </td>
+            <td class="text-end pe-3">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-sm btn-outline-info border-0" onclick="viewEmployeeHistory('${emp.id}')" title="History">
+                        <i class="bi bi-clock-history"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-primary" onclick="editEmployee('${emp.id}')">
-                        <i class="bi bi-pencil"></i> Edit
+                    <button class="btn btn-sm btn-outline-primary border-0" onclick="editEmployee('${emp.id}')" title="Edit">
+                        <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee('${emp.id}')">
-                        <i class="bi bi-trash"></i> Delete
+                    <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteEmployee('${emp.id}')" title="Delete">
+                        <i class="bi bi-trash3"></i>
                     </button>
                 </div>
             </td>`;
         fragment.appendChild(tr);
     });
 
-    // Final single-action UI update
     tbody.innerHTML = '';
     tbody.appendChild(fragment);
-
-    // 5. Update the pagination numbers
     renderPagination(totalPages);
 }
-
 // Checkbox Logic
 function toggleEmpSelect(id) {
     if (selectedEmployeeIds.has(id)) selectedEmployeeIds.delete(id);
@@ -2970,45 +3314,98 @@ async function renderEmployeeSummary() {
 
   // 2. Render UI Cards
   document.getElementById('employeeSummary').innerHTML = `
-    <div class="row g-3">
-        <div class="col-md-2">
-            <div class="card p-3 bg-light text-center h-100 border-0 shadow-sm">
-                <small class="text-muted fw-bold">Month Days</small><br><span class="fs-4">${validWorkingDaysCount}</span>
+ <div class="row g-4">
+    <div class="col-md-3">
+        <div class="card h-100 border-start border-4 border-info shadow-sm">
+            <div class="card-body py-3">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Total Days</div>
+                <div class="h3 mb-0 fw-bold">${validWorkingDaysCount} <small class="text-muted fs-6">Days</small></div>
             </div>
         </div>
-        
-        <div class="col-md-2">
-            <div class="card p-3 bg-success text-white text-center h-100 border-0 shadow-sm">
-                <small class="fw-bold">Actual Present</small><br><span class="fs-4">${finalPresentDays}</span>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card h-100 border-start border-4 border-success shadow-sm">
+            <div class="card-body py-3">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Actual Present</div>
+                <div class="h3 mb-0 fw-bold text-success">${finalPresentDays} <small class="text-muted fs-6">Worked</small></div>
             </div>
         </div>
-        
-        <div class="col-md-5">
-            <div class="card p-3 bg-primary text-white text-center h-100 border-0 shadow-sm">
-                <small class="fw-bold">Leaves (PL / CL / SL / FL / COFF)</small><br>
-                <span class="fs-4">${leaves.PL} / ${leaves.CL} / ${leaves.SL} / ${leaves.FL} / ${leaves.COFF}</span>
-            </div>
-        </div>
+    </div>
 
-        <div class="col-md-3">
-            <div class="card p-3 bg-warning text-dark text-center h-100 border-0 shadow-sm">
-                <small class="fw-bold">Fixed Holidays (FH)</small><br><span class="fs-4">${fixedHolidaysCount}</span>
+    <div class="col-md-3">
+        <div class="card h-100 border-start border-4 border-primary shadow-sm">
+            <div class="card-body py-3">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Total Leaves</div>
+                <div class="h3 mb-0 fw-bold text-primary">
+                    ${leaves.PL + leaves.CL + leaves.SL + leaves.FL + leaves.COFF}
+                </div>
             </div>
         </div>
-        
-        <div class="col-md-12">
-            <div class="card p-3 bg-dark text-white text-center border-0 shadow">
-                <span class="fs-5">Final Combined NSA Amount: <strong class="text-warning">₹${totalNsaAmount}</strong></span>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card h-100 border-start border-4 border-warning shadow-sm">
+            <div class="card-body py-3">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Fixed Holidays</div>
+                <div class="h3 mb-0 fw-bold text-warning">${fixedHolidaysCount}</div>
             </div>
         </div>
-        
-        <div class="col-md-12">
-            <div class="card p-4 bg-light border-0 shadow-sm">
-                <h5 class="card-title text-primary mb-3"><i class="bi bi-clock-history"></i> Detailed Shift NSA Breakdown</h5>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm bg-light">
+            <div class="card-body">
+                <div class="text-muted small fw-bold text-uppercase mb-3">Leave Breakdown</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-center">
+                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.PL}</div>
+                        <div class="small text-muted">PL</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.CL}</div>
+                        <div class="small text-muted">CL</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.SL}</div>
+                        <div class="small text-muted">SL</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.FL}</div>
+                        <div class="small text-muted">FL</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.COFF}</div>
+                        <div class="small text-muted">CO</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100 nsa-total-card shadow">
+            <div class="card-body d-flex justify-content-between align-items-center px-4">
+                <div>
+                    <div class="fw-bold text-uppercase small opacity-75">Final Combined NSA</div>
+                    <div class="small opacity-50">Calculated for the month</div>
+                </div>
+                <div class="h1 mb-0 nsa-amount-text">₹${totalNsaAmount.toLocaleString()}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header py-3">
+                <i class="bi bi-clock-history me-2"></i> Detailed Shift NSA Breakdown
+            </div>
+            <div class="card-body p-4">
                 ${breakdownHtml}
             </div>
         </div>
-    </div>`;
+    </div>
+</div>`;
 
   renderSummaryChart(finalPresentDays, leaves);
 
