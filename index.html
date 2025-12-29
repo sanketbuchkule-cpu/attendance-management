@@ -246,9 +246,12 @@
 
     /* --- MOBILE RESPONSIVE --- */
     @media (max-width: 768px) {
-        #calendar { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
+        #calendar { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
         .date-cell { min-height: 80px; }
         .nsa-total-card .display-4 { font-size: 2rem; }
+        .gap-1 {
+    gap: 0rem !important;
+}
     }
 
     /* Scrollbar */
@@ -480,6 +483,85 @@ tbody tr:hover {
     color: white !important; /* White for active text */
     box-shadow: 0 2px 4px rgba(0, 33, 71, 0.2);
 }
+
+@media (max-width: 768px) {
+    /* 1. Header & Buttons Optimization */
+    .d-flex.gap-2.flex-wrap {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr; /* Buttons in 2 columns */
+        gap: 10px !important;
+    }
+    
+    .d-flex.gap-2.flex-wrap .btn, 
+    .d-flex.gap-2.flex-wrap .dropdown,
+    .d-flex.gap-2.flex-wrap .dropdown-toggle {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* 2. Transform Table to Cards */
+    #employeeTable thead {
+        display: none; /* Hide headers on mobile */
+    }
+
+    #employeeTable, #employeeTable tbody, #employeeTable tr, #employeeTable td {
+        display: block;
+        width: 100%;
+    }
+
+    #employeeTable tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #fff;
+        padding: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        position: relative;
+    }
+
+    #employeeTable td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border: none;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        min-height: 40px;
+    }
+
+    /* Create Labels for the data */
+    #employeeTable td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        font-weight: bold;
+        text-align: left;
+        color: #002147;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+    }
+
+    /* Handle the Checkbox and Actions specifically */
+    #employeeTable td:first-child {
+        text-align: left;
+        padding-left: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+    #employeeTable td:first-child::before { content: ""; }
+
+    #employeeTable td:last-child {
+        text-align: center;
+        padding-left: 10px;
+        border-top: 1px solid #eee;
+        margin-top: 10px;
+    }
+    #employeeTable td:last-child::before { content: ""; position: relative; width: 0; }
+}
+
+
 
 </style>
 </head>
@@ -1231,7 +1313,7 @@ tbody tr:hover {
             </div>
 
             <div class="calendar-wrapper p-2 rounded border bg-white shadow-inner">
-                <div id="calendarHeaders" class="row row-cols-7 g-1 text-center mb-2">
+                <div id="calendarHeaders" class="row g-1 text-center mb-2">
                     <div class="col py-2 fw-bold text-muted small text-uppercase">Sun</div>
                     <div class="col py-2 fw-bold text-muted small text-uppercase">Mon</div>
                     <div class="col py-2 fw-bold text-muted small text-uppercase">Tue</div>
@@ -1240,7 +1322,7 @@ tbody tr:hover {
                     <div class="col py-2 fw-bold text-muted small text-uppercase">Fri</div>
                     <div class="col py-2 fw-bold text-muted small text-uppercase">Sat</div>
                 </div>
-                <div id="calendar" class="row row-cols-7 g-1 min-vh-50">
+                <div id="calendar" class="row g-1 min-vh-50">
                      <div class="col-12"><div class="alert bg-light border text-center py-5 text-muted">Select an employee and month above to begin marking attendance.</div></div>
                 </div>
             </div>
@@ -1274,7 +1356,7 @@ tbody tr:hover {
                 <input type="month" class="form-control border-2" id="summaryMonth">
             </div>
             <div class="col-md-5 d-flex align-items-end gap-2">
-                <button class="btn text-white fw-bold shadow-sm px-4" style="background-color: #002147;" onclick="renderEmployeeSummary()">
+                <button class="btn text-white fw-bold shadow-sm" style="background-color: #002147;" onclick="renderEmployeeSummary()">
                     View Summary
                 </button>
                 <button class="btn btn-outline-secondary fw-bold d-none" id="backSummaryBtn" onclick="hideEmployeeSummary()">Reset</button>
@@ -3035,18 +3117,21 @@ async function renderEmployees(page = currentPage, filter = '') {
         const statusValue = emp.status || 'Active';
         const isChecked = selectedEmployeeIds.has(emp.id) ? 'checked' : '';
 
-        // FIXED: Added 'emp-checkbox' class to the input below
+        // ADDED data-label to each <td> for mobile responsiveness
         tr.innerHTML = `
             <td class="ps-3">
                 <input type="checkbox" class="form-check-input emp-checkbox border-2" 
                     value="${emp.id}" ${isChecked} onchange="toggleEmpSelect('${emp.id}')">
             </td>
-            <td><span class="fw-bold" style="color: #002147;">${emp.id}</span></td>
-            <td><div class="fw-bold mb-0">${emp.name}</div><small class="text-muted">DealerOn Associate</small></td>
-            <td><span class="badge border bg-light text-dark fw-normal px-3 py-2">${deptValue}</span></td>
-            <td><span class="badge px-3 py-2 fw-bold" style="${shiftStyle}"><i class="bi bi-clock me-1"></i>${rawShift}</span></td>
-            <td><span class="badge rounded-pill fw-bold ${statusValue === 'Active' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}" style="padding: 0.5em 1em;">● ${statusValue}</span></td>
-            <td class="text-end pe-3">
+            <td data-label="ID"><span class="fw-bold" style="color: #002147;">${emp.id}</span></td>
+            <td data-label="NAME">
+                <div class="fw-bold mb-0">${emp.name}</div>
+                <small class="text-muted">DealerOn Associate</small>
+            </td>
+            <td data-label="DEPARTMENT"><span class="badge border bg-light text-dark fw-normal px-3 py-2">${deptValue}</span></td>
+            <td data-label="SHIFT"><span class="badge px-3 py-2 fw-bold" style="${shiftStyle}"><i class="bi bi-clock me-1"></i>${rawShift}</span></td>
+            <td data-label="STATUS"><span class="badge rounded-pill fw-bold ${statusValue === 'Active' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}" style="padding: 0.5em 1em;">● ${statusValue}</span></td>
+            <td class="text-end pe-3" data-label="ACTIONS">
                 <div class="btn-group shadow-sm bg-white rounded">
                     <button class="btn btn-sm btn-outline-navy border-0 py-2 px-2" style="margin: 2px;" onclick="viewEmployeeHistory('${emp.id}')"><i class="bi bi-clock-history"></i></button>
                     <button class="btn btn-sm btn-outline-navy border-0 py-2 px-2" style="margin: 2px;" onclick="editEmployee('${emp.id}')"><i class="bi bi-pencil-square"></i></button>
