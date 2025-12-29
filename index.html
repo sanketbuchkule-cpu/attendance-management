@@ -5,6 +5,11 @@
   <title>Leave & NSA Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#002147">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -460,6 +465,21 @@ tbody tr:hover {
     color: #a71d2a;
 }
 
+/* Custom DealerOn Pills */
+#dateTab .nav-link {
+    color: #002147; /* Navy for inactive text */
+    transition: all 0.3s ease;
+}
+
+#dateTab .nav-link:hover {
+    background-color: rgba(0, 33, 71, 0.05);
+}
+
+#dateTab .nav-link.active {
+    background-color: #002147 !important; /* Navy for active background */
+    color: white !important; /* White for active text */
+    box-shadow: 0 2px 4px rgba(0, 33, 71, 0.2);
+}
 
 </style>
 </head>
@@ -667,13 +687,13 @@ tbody tr:hover {
                                 <h6 class="fw-bold mb-3 text-navy">Select Dates</h6>
                                 
                                 <ul class="nav nav-pills nav-fill mb-3 bg-light p-1 rounded" id="dateTab" role="tablist">
-                                    <li class="nav-item">
-                                        <button class="nav-link active py-1 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabRange">Date Range</button>
-                                    </li>
-                                    <li class="nav-item">
-                                        <button class="nav-link py-1 small fw-bold text-navy" data-bs-toggle="pill" data-bs-target="#tabSpecific">Specific Dates</button>
-                                    </li>
-                                </ul>
+    <li class="nav-item">
+        <button class="nav-link active py-1 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabRange">Date Range</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link py-1 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabSpecific">Specific Dates</button>
+    </li>
+</ul>
 
                                 <div class="tab-content">
                                     <div class="tab-pane fade show active" id="tabRange">
@@ -907,28 +927,28 @@ tbody tr:hover {
 
 <div class="container-fluid p-4">
 
-    <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="management-tab" data-bs-toggle="tab" data-bs-target="#management-content" type="button" role="tab" aria-controls="management-content" aria-selected="true" 
-            data-tooltip="Manage Employees & App Settings">
-        ⚙️ Management
-    </button>
-</li>
-
-<li class="nav-item" role="presentation">
-    <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance-content" type="button" role="tab" aria-controls="attendance-content" aria-selected="false" 
-            data-tooltip="View & Mark Daily Attendance">
-        🗓️ Attendance Calendar
-    </button>
-</li>
-
-<li class="nav-item" role="presentation">
-    <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-content" type="button" role="tab" aria-controls="summary-content" aria-selected="false" onclick="loadSummaryTabDefaults()" 
-            data-tooltip="View NSA Reports & Monthly Totals">
-        📈 Reporting & Summary
-    </button>
-</li>
-    </ul>
+  <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="management-tab" data-bs-toggle="tab" data-bs-target="#management-content" type="button" role="tab">⚙️ Management</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance-content" type="button" role="tab">🗓️ Attendance Calendar</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-content" type="button" role="tab" onclick="loadSummaryTabDefaults()">📈 Reporting & Summary</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="activity-tab" 
+        data-bs-toggle="tab" 
+        data-bs-target="#activity-content" 
+        type="button" 
+        role="tab" 
+        onclick="loadActivityLogs(); populateManagerFilter();" 
+        data-tooltip="View System Audit Trails & Logs">
+    📜 Activity Log
+</button>
+    </li>
+</ul>
 
     <div class="tab-content" id="mainTabsContent">
 
@@ -1010,15 +1030,36 @@ tbody tr:hover {
             <small class="text-muted fw-bold ps-2" id="holidayPageInfo">Showing page 1 of 1</small>
             <nav>
                 <ul class="pagination pagination-sm mb-0 gap-1">
-                    <li class="page-item"><button class="page-link rounded border-0 text-navy fw-bold" onclick="changeHolidayPage(-1)"><i class="bi bi-chevron-left"></i></button></li>
-                    <li class="page-item active"><span class="page-link rounded border-0 shadow-sm" id="currentHolidayPage" style="background-color: #FF8C00; border-color: #FF8C00;">1</span></li>
-                    <li class="page-item"><button class="page-link rounded border-0 text-navy fw-bold" onclick="changeHolidayPage(1)"><i class="bi bi-chevron-right"></i></button></li>
-                </ul>
+    <li class="page-item" id="prevHolidayLi">
+        <button class="page-link rounded border-0 text-navy fw-bold shadow-sm" 
+                id="prevHolidayBtn"
+                onclick="changeHolidayPage(-1)" 
+                style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background-color: #ffffff; color: #002147;">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+    </li>
+
+    <li class="page-item active">
+        <span class="page-link rounded border-0 shadow-sm fw-bold" 
+              id="currentHolidayPage" 
+              style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background-color: #FF8C00; border-color: #FF8C00; color: white;">
+            1
+        </span>
+    </li>
+
+    <li class="page-item" id="nextHolidayLi">
+        <button class="page-link rounded border-0 text-navy fw-bold shadow-sm" 
+                id="nextHolidayBtn"
+                onclick="changeHolidayPage(1)" 
+                style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background-color: #ffffff; color: #002147;">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    </li>
+</ul>
             </nav>
         </div>
     </div>
 </div>
-
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <div class="d-flex align-items-center">
         <div class="p-2 rounded me-3" style="background-color: rgba(0, 33, 71, 0.1);">
@@ -1081,8 +1122,8 @@ tbody tr:hover {
                         <i class="bi bi-trash me-1"></i> Delete Selected
                     </button>
                     <button class="btn btn-dark btn-sm fw-bold px-3" onclick="deleteAllEmployees()">
-                        <i class="bi bi-exclamation-triangle me-1"></i> Delete All
-                    </button>
+    <i class="bi bi-exclamation-triangle me-1"></i> Delete All
+</button>
                 </div>
             </div>
         </div>
@@ -1459,7 +1500,86 @@ tbody tr:hover {
     </div>
 </div>
 
-        </div> </div> </div>
+        </div> 
+    
+<div class="tab-pane fade" id="activity-content" role="tabpanel" aria-labelledby="activity-tab">
+    <div class="card border-0 shadow-sm mb-4" style="border-top: 5px solid #002147 !important;">
+        <div class="card-body p-4">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center">
+                    <div class="p-2 rounded me-3" style="background-color: rgba(0, 33, 71, 0.1);">
+                        <i class="bi bi-clock-history fs-4" style="color: #002147;"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold" style="color: #002147;">System Activity Log</h4>
+                        <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Audit Trail & Security Tracking</small>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-white border-navy text-navy"><i class="bi bi-person-filter"></i></span>
+                        <select id="logUserFilter" class="form-select border-navy fw-bold text-navy" onchange="filterLogsByUser(this.value)">
+    <option value="">All Managers</option>
+    </select>
+                    </div>
+                    <button class="btn btn-navy btn-sm fw-bold px-3 shadow-sm" onclick="refreshActivityLogs()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive border rounded bg-white mb-3" style="max-height: 500px; overflow-y: auto;">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="sticky-top bg-white" style="z-index: 10;">
+                        <tr style="background-color: #002147; color: white;">
+                            <th class="ps-3 py-3" style="width: 200px;">Timestamp</th>
+                            <th style="width: 180px;">Action Event</th>
+                            <th>Details & Impact</th>
+                            <th class="pe-3" style="width: 150px;">Performed By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityLogTableBody">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded border shadow-sm">
+                <div class="small fw-bold text-navy text-uppercase">
+                    <i class="bi bi-info-circle me-1"></i> Showing activity history
+                </div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0 gap-2">
+                        <li class="page-item">
+                            <button class="page-link rounded border-0 shadow-sm fw-bold text-navy" 
+                                    id="prevLogBtn" onclick="changeLogPage(-1)" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                        </li>
+                        <li class="page-item active">
+                            <span class="page-link rounded border-0 shadow-sm fw-bold text-white" 
+                                  id="currentLogPage" 
+                                  style="background-color: #FF8C00; border-color: #FF8C00; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                                1
+                            </span>
+                        </li>
+                        <li class="page-item">
+                            <button class="page-link rounded border-0 shadow-sm fw-bold text-navy" 
+                                    id="nextLogBtn" onclick="changeLogPage(1)" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+ </div>
+
+
 
 <script>
     // --- FIREBASE INITIALIZATION & CONFIGURATION ---
@@ -1479,6 +1599,20 @@ tbody tr:hover {
     
     // ---------------------------------------------
 // This stores the employee data so we don't have to keep asking the internet
+
+let currentLoggedInUser = "Unknown User";
+
+// Firebase Auth Observer
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        // Use the email as the unique identifier (e.g., mahesh.kadam@dealeron.com)
+        currentLoggedInUser = user.email; 
+        console.log("Logged in as:", currentLoggedInUser);
+    } else {
+        // Redirect to login if no user is found
+        window.location.href = "login.html"; 
+    }
+});
 
   let bulkEmployeeCache = [];
     document.getElementById('downloadSampleExcel').addEventListener('click', () => {
@@ -2024,6 +2158,183 @@ async function processBulkAttendance() {
     }
 }
 
+
+async function logActivity(actionType, details, targetId = null) {
+    try {
+        const logEntry = {
+            timestamp: new Date().toISOString(),
+            action: actionType,
+            details: details,
+            targetId: targetId,
+            performedBy: currentLoggedInUser, // <--- Dynamic from Firebase Auth
+            platform: "DealerOn Dashboard"
+        };
+
+        await db.collection("Activity_Logs").add(logEntry);
+    } catch (error) {
+        console.error("Audit Log Error:", error);
+    }
+}
+
+function getBadgeColor(action) {
+    if (action.includes('DELETE')) return 'bg-danger';
+    if (action.includes('UPDATE') || action.includes('SAVE')) return 'bg-warning text-dark';
+    if (action.includes('SUCCESS')) return 'bg-success';
+    return 'bg-info text-dark';
+}
+
+let lastVisibleLog = null; // Track the last document for pagination
+
+let currentLogPage = 1;
+let logPageStack = []; 
+let lastLogDoc = null;
+const LOGS_PER_PAGE = 10;
+let currentFilterUser = ""; // Tracks if we are filtering by a specific manager
+
+async function loadActivityLogs(direction = 0) {
+    const tbody = document.getElementById('activityLogTableBody');
+    const nextBtn = document.getElementById('nextLogBtn');
+    const prevBtn = document.getElementById('prevLogBtn');
+
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2 text-navy"></div> Fetching logs...</td></tr>';
+
+    try {
+        // 1. Initialize query on the collection
+        let query = db.collection("Activity_Logs");
+
+        // 2. APPLY FILTER FIRST (Critical for query performance)
+        // This handles sbsanket87@gmail.com or other manager emails
+        if (currentFilterUser && currentFilterUser !== "") {
+            query = query.where("performedBy", "==", currentFilterUser);
+        }
+
+        // 3. APPLY SORTING SECOND
+        query = query.orderBy("timestamp", "desc");
+
+        // 4. Set limit for pagination
+        query = query.limit(LOGS_PER_PAGE);
+
+        // 5. Navigation/Pagination Logic
+        if (direction === 1 && lastLogDoc) {
+            query = query.startAfter(lastLogDoc);
+        } else if (direction === -1 && logPageStack.length > 1) {
+            logPageStack.pop(); 
+            const prevPageFirstDoc = logPageStack[logPageStack.length - 1];
+            query = query.startAt(prevPageFirstDoc);
+        }
+
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-5 text-muted">No activity records found for ${currentFilterUser || 'All Managers'}.</td></tr>`;
+            if (nextBtn) nextBtn.disabled = true;
+            return;
+        }
+
+        if (direction !== -1) {
+            logPageStack.push(snapshot.docs[0]);
+        }
+
+        tbody.innerHTML = '';
+        lastLogDoc = snapshot.docs[snapshot.docs.length - 1];
+
+        snapshot.forEach(doc => {
+            const log = doc.data();
+            const date = new Date(log.timestamp).toLocaleString('en-IN');
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="ps-3 small fw-bold text-muted">${date}</td>
+                <td><span class="badge rounded-pill px-3 py-2 ${getBadgeColor(log.action)}">${log.action}</span></td>
+                <td class="small">${log.details}</td>
+                <td class="fw-bold text-navy pe-3"><i class="bi bi-person-circle me-1"></i> ${log.performedBy}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Update UI Controls
+        document.getElementById('currentLogPage').innerText = currentLogPage;
+        if (prevBtn) prevBtn.disabled = (currentLogPage === 1);
+        if (nextBtn) nextBtn.disabled = (snapshot.size < LOGS_PER_PAGE);
+        
+        if (prevBtn) prevBtn.style.opacity = prevBtn.disabled ? "0.4" : "1";
+        if (nextBtn) nextBtn.style.opacity = nextBtn.disabled ? "0.4" : "1";
+
+    } catch (error) {
+        // This is where you will see the index error in your console
+        console.error("Audit log load error:", error);
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-danger">Error fetching activity history. Please check browser console for index link.</td></tr>';
+    }
+}
+
+// Function to handle the Filter change
+/**
+ * Filters the activity table based on the selected Manager's Email.
+ * @param {string} userEmail - The email address from the dropdown.
+ */
+function filterLogsByUser(userEmail) {
+    // 1. Clean the input: ensure it's a string and trimmed
+    // This prevents errors if there are hidden spaces in the dropdown values
+    const selectedUser = userEmail ? userEmail.trim() : "";
+
+    // 2. Set the global filter variable
+    currentFilterUser = selectedUser;
+
+    // 3. Reset Pagination State 
+    // Important: Resetting these ensures we start from page 1 of the new filter
+    currentLogPage = 1;
+    logPageStack = [];
+    lastLogDoc = null;
+
+    // 4. Update the UI to show a loading state
+    const tbody = document.getElementById('activityLogTableBody');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-5">
+                    <div class="spinner-border spinner-border-sm text-navy me-2"></div>
+                    Loading logs for ${selectedUser || 'All Managers'}...
+                </td>
+            </tr>`;
+    }
+
+    // 5. Trigger the database fetch
+    // loadActivityLogs(0) will now use the updated 'currentFilterUser' in its query
+    loadActivityLogs(0); 
+}
+
+function changeLogPage(step) {
+    currentLogPage += step;
+    loadActivityLogs(step);
+}
+
+function refreshActivityLogs() {
+    currentLogPage = 1;
+    logPageStack = [];
+    lastLogDoc = null;
+    loadActivityLogs(0);
+}
+
+function renderLoadMoreLogs(hasMore) {
+    let loadMoreRow = document.getElementById('loadMoreLogsRow');
+    if (loadMoreRow) loadMoreRow.remove();
+
+    if (hasMore) {
+        const tbody = document.getElementById('activityLogTableBody');
+        const tr = document.createElement('tr');
+        tr.id = 'loadMoreLogsRow';
+        tr.innerHTML = `
+            <td colspan="4" class="text-center py-3 bg-light">
+                <button class="btn btn-sm btn-outline-navy fw-bold" onclick="loadActivityLogs(true)">
+                    Load Older Activity...
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
 /*********************
  * FIREBASE ASYNC CRUD FUNCTIONS (REPLACING LOCAL STORAGE)
  *********************/
@@ -2841,18 +3152,21 @@ function handlePageClick(event, pageNum) {
 
 async function deleteSelectedEmployees() {
     if (selectedEmployeeIds.size === 0) return alert("Please select employees to remove.");
-    if (!confirm(`Are you sure you want to delete ${selectedEmployeeIds.size} employees and ALL their attendance history?`)) return;
+    
+    const count = selectedEmployeeIds.size;
+    if (!confirm(`Are you sure you want to delete ${count} employees and ALL their attendance history?`)) return;
 
     try {
-        // Show a loading state if you have one
-        console.log(`Starting bulk deletion for ${selectedEmployeeIds.size} employees...`);
+        // 1. Log the START of the specific deletion
+        // We capture the IDs being targeted for the audit trail
+        const targetedIds = Array.from(selectedEmployeeIds).join(', ');
+        await logActivity("SELECTED_DELETE_START", `Initiated deletion for ${count} employees. IDs: ${targetedIds}`);
 
-        // Use a loop to ensure each employee's attendance is wiped before moving to the next
+        console.log(`Starting bulk deletion for ${count} employees...`);
+
         for (const id of selectedEmployeeIds) {
-            // Reusing your deep-clean logic that searches for 'empId'
             await deleteEmployeeFromDB(id);
             
-            // Clear local attendance memory if it exists to prevent "ghost" dots
             if (typeof allAttendance !== 'undefined') {
                 allAttendance = allAttendance.filter(rec => rec.empId !== id);
             }
@@ -2862,63 +3176,158 @@ async function deleteSelectedEmployees() {
         selectedEmployeeIds.clear();
         bulkEmployeeCache = []; 
         
-        // Refresh all components
         await renderEmployees(); 
         await populateDepartmentFilter();
         await populateAttendanceEmployees(); 
         await populateDeptDropdown('deptSummaryDept');
         await populateDeptDropdown('yearlySummaryDept');
         
-        // Reset the Select All checkbox
         const selectAllHeader = document.getElementById('selectAllHeader');
         if (selectAllHeader) selectAllHeader.checked = false;
 
-        // Force calendar refresh to show it's empty
         renderCalendar();
 
+        // 2. Log SUCCESSFUL completion
+        await logActivity("SELECTED_DELETE_SUCCESS", `Successfully removed ${count} selected employees and their history.`);
+
         alert("Selected employees and all their history removed successfully.");
+
+        // Optional: Refresh the Activity Log table if it's visible on the current page
+        if (document.getElementById('activityLogTableBody')) {
+            loadActivityLogs();
+        }
+
     } catch (e) {
+        // 3. Log the FAILURE
+        await logActivity("SELECTED_DELETE_FAILED", `Error deleting ${count} employees: ${e.message}`);
+        
         console.error("Error deleting selected employees:", e);
         alert("Error deleting employees. Check console for details.");
     }
 }
 
+let lastDeletedSnapshot = []; // Global variable to hold backup data
+
 async function deleteAllEmployees() {
-    if (!confirm("⚠️ DANGER: This will remove EVERY employee AND their attendance history. Proceed?")) return;
-    
     const all = await getEmployeesFromDB();
     if (all.length === 0) return alert("No employees found to delete.");
 
+    // 1. Double Confirmation
+    const firstCheck = confirm("⚠️ DANGER: This will remove EVERY employee AND their attendance history. Proceed?");
+    if (!firstCheck) return;
+
+    const finalCheck = prompt("Final Safety Check: Type 'DELETE' to confirm wiping the database:");
+    if (finalCheck !== "DELETE") return alert("Deletion cancelled.");
+
     try {
-        // Loop through every employee and trigger the deep clean logic
+        const count = all.length;
+        
+        // --- LOGGING: Start of Wipe ---
+        await logActivity("DATABASE_WIPE_START", `Initiated full wipe of ${count} employee records.`);
+
+        // 2. Create the Backup Snapshot
+        lastDeletedSnapshot = [...all]; 
+
+        // 3. Backup to 'Settings' collection
+        await db.collection("Settings").doc("Last_Backup").set({ 
+            employees: lastDeletedSnapshot,
+            deletedAt: new Date().toISOString(),
+            count: count
+        });
+
+        // 4. Perform the Deletion
         for (const emp of all) {
             await deleteEmployeeFromDB(emp.id);
         }
 
-        // --- UI SYNC BLOCK ---
-        bulkEmployeeCache = []; 
-        selectedEmployeeIds.clear();
-        
-        // Completely wipe local attendance memory
-        if (typeof allAttendance !== 'undefined') allAttendance = [];
-        
-        await renderEmployees();
-        await populateDepartmentFilter();
-        await populateAttendanceEmployees();
-        await populateDeptDropdown('deptSummaryDept');
-        await populateDeptDropdown('yearlySummaryDept');
+        // 5. Update UI State
+        await syncUIAfterDeletion();
 
-        const selectAllHeader = document.getElementById('selectAllHeader');
-        if (selectAllHeader) selectAllHeader.checked = false;
+        // --- LOGGING: Wipe Success ---
+        await logActivity("DATABASE_WIPE_SUCCESS", `Successfully wiped ${count} records and created temporary backup.`);
 
-        // Reset the calendar to a blank state
-        renderCalendar();
+        // 6. Show the Undo Toast
+        const undoToast = document.getElementById('undoToast');
+        if (undoToast) {
+            undoToast.classList.remove('d-none');
+            setTimeout(() => {
+                undoToast.classList.add('d-none');
+            }, 10000);
+        }
 
-        alert("Database fully cleared (Employees & Attendance).");
     } catch (e) {
         console.error("Error clearing database:", e);
+        // --- LOGGING: Wipe Failure ---
+        await logActivity("DATABASE_WIPE_FAILED", `Error during wipe: ${e.message}`);
         alert("Failed to clear database.");
     }
+}
+
+async function undoDeletion() {
+    if (!lastDeletedSnapshot || lastDeletedSnapshot.length === 0) return;
+
+    const undoBtn = document.querySelector('#undoToast button');
+    if (undoBtn) {
+        undoBtn.disabled = true;
+        undoBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    }
+
+    try {
+        const count = lastDeletedSnapshot.length;
+        
+        // --- LOGGING: Start of Restore ---
+        await logActivity("RESTORE_START", `Initiated restoration of ${count} employees from backup.`);
+
+        // Loop through backup and re-insert into DB
+        for (const emp of lastDeletedSnapshot) {
+            await db.collection("Employees").doc(emp.id).set(emp);
+        }
+
+        // --- LOGGING: Restore Success ---
+        await logActivity("RESTORE_SUCCESS", `Successfully restored ${count} employees to the database.`);
+
+        alert("Undo Successful: All records restored.");
+        document.getElementById('undoToast')?.classList.add('d-none');
+        
+        // Refresh everything
+        await renderEmployees();
+        await populateAttendanceEmployees();
+        renderCalendar();
+        
+        // Refresh Activity Logs tab if it exists
+        if (typeof refreshActivityLogs === 'function') refreshActivityLogs();
+        
+    } catch (e) {
+        console.error("Undo failed:", e);
+        // --- LOGGING: Restore Failure ---
+        await logActivity("RESTORE_FAILED", `Critical error during restoration: ${e.message}`);
+        alert("Failed to restore data fully.");
+    } finally {
+        if (undoBtn) {
+            undoBtn.disabled = false;
+            undoBtn.innerText = "Undo";
+        }
+    }
+}
+
+async function syncUIAfterDeletion() {
+    bulkEmployeeCache = []; 
+    selectedEmployeeIds.clear();
+    if (typeof allAttendance !== 'undefined') allAttendance = [];
+    
+    await renderEmployees();
+    await populateDepartmentFilter();
+    await populateAttendanceEmployees();
+    await populateDeptDropdown('deptSummaryDept');
+    await populateDeptDropdown('yearlySummaryDept');
+
+    const selectAllHeader = document.getElementById('selectAllHeader');
+    if (selectAllHeader) selectAllHeader.checked = false;
+
+    renderCalendar();
+    
+    // Auto-refresh the activity log tab after UI sync
+    if (typeof refreshActivityLogs === 'function') refreshActivityLogs();
 }
 
 /*********************
@@ -2927,6 +3336,8 @@ async function deleteAllEmployees() {
 async function saveEmployee(){
   const empIdValue = empId.value.trim();
   const index = empIndex.value;
+  const isNew = (index === ''); // Check if we are adding or editing
+  
   const emp = {
     id: empIdValue,
     name: empName.value.trim(),
@@ -2936,25 +3347,44 @@ async function saveEmployee(){
     status: empStatus.value
   };
   
-  if(!emp.id||!emp.name||!emp.department||!emp.joinDate){ alert('Please fill all required fields, including Join Date.'); return; }
+  if(!emp.id || !emp.name || !emp.department || !emp.joinDate){ 
+    alert('Please fill all required fields, including Join Date.'); 
+    return; 
+  }
   
-  const employees=await getEmployeesFromDB();
+  const employees = await getEmployeesFromDB();
   
-  // Check for duplicate ID only when adding new employee (index is empty when adding)
-  if (index === '' && employees.some(e => e.id === emp.id)) {
+  // Check for duplicate ID only when adding new employee
+  if (isNew && employees.some(e => e.id === emp.id)) {
       alert(`Employee ID ${emp.id} already exists.`);
       return;
   }
   
-  // Use the ID as the key for Firestore, index is ignored
-  if(await saveEmployeeToDB(emp, index === '')) {
+  // Save to Firestore
+  if(await saveEmployeeToDB(emp, isNew)) {
+    
+    // --- LOGGING BLOCK ---
+    const actionType = isNew ? "ADD_EMPLOYEE" : "UPDATE_EMPLOYEE";
+    const actionDetails = isNew 
+        ? `Added new employee: ${emp.name} (ID: ${emp.id}) to ${emp.department}`
+        : `Updated details for ${emp.name} (ID: ${emp.id})`;
+        
+    await logActivity(actionType, actionDetails, emp.id);
+    // --------------------
+
     bootstrap.Modal.getInstance(employeeModal).hide();
     clearForm();
     bulkEmployeeCache = [];
+    
+    // Sync all UI components
     await renderEmployees();
     await populateDepartmentFilter(); 
     await populateDeptDropdown('deptSummaryDept'); 
-    await populateDeptDropdown('yearlySummaryDept'); 
+    await populateDeptDropdown('yearlySummaryDept');
+    await populateAttendanceEmployees(); // Added to ensure attendance list stays synced
+
+    // Refresh Activity Log tab if it's currently open
+    if (typeof refreshActivityLogs === 'function') refreshActivityLogs();
   }
 }
 
@@ -2978,6 +3408,7 @@ async function saveBulkEmployees() {
   const employees = await getEmployeesFromDB();
   let newEmployeesCount = 0;
   const batch = db.batch();
+  let addedNames = []; // For logging
 
   for(let i=0; i<ids.length; i++){
     const empId = ids[i];
@@ -2992,48 +3423,77 @@ async function saveBulkEmployees() {
         };
         batch.set(db.collection(EMPLOYEES_COLLECTION).doc(empId), newEmployee);
         newEmployeesCount++;
+        addedNames.push(names[i]);
     }
   }
 
   try {
-      await batch.commit();
-      bulkEmployeeCache = []; // Clear the cache so it fetches the new list
-      await renderEmployees();
-      await populateDepartmentFilter();
-      await populateAttendanceEmployees();
-      await populateDeptDropdown('deptSummaryDept'); 
-      await populateDeptDropdown('yearlySummaryDept'); 
-      bootstrap.Modal.getInstance(document.getElementById('bulkEmployeeModal')).hide();
+      if (newEmployeesCount > 0) {
+          await batch.commit();
+          
+          // --- LOGGING: Bulk Add Success ---
+          await logActivity(
+            "BULK_ADD_EMPLOYEE", 
+            `Successfully added ${newEmployeesCount} employees to ${dept} department. Names: ${addedNames.join(', ')}`
+          );
 
-      alert(`${newEmployeesCount} new employees added.`);
-      document.getElementById('bulkEmpIds').value='';
-      document.getElementById('bulkEmpNames').value='';
-      document.getElementById('bulkEmpDept').value='';
-      document.getElementById('bulkEmpShift').value='MORNING_8_5';
-      document.getElementById('bulkEmpJoinDate').value='';
+          bulkEmployeeCache = []; 
+          await renderEmployees();
+          await populateDepartmentFilter();
+          await populateAttendanceEmployees();
+          await populateDeptDropdown('deptSummaryDept'); 
+          await populateDeptDropdown('yearlySummaryDept'); 
+          
+          const modal = bootstrap.Modal.getInstance(document.getElementById('bulkEmployeeModal'));
+          if(modal) modal.hide();
+
+          alert(`${newEmployeesCount} new employees added.`);
+          
+          // Reset fields
+          document.getElementById('bulkEmpIds').value='';
+          document.getElementById('bulkEmpNames').value='';
+          document.getElementById('bulkEmpDept').value='';
+          document.getElementById('bulkEmpShift').value='MORNING_8_5';
+          document.getElementById('bulkEmpJoinDate').value='';
+
+          // Refresh log tab if active
+          if (typeof refreshActivityLogs === 'function') refreshActivityLogs();
+      } else {
+          alert("No new unique IDs found to add.");
+      }
   } catch(e) {
       console.error("Bulk add failed:", e);
+      // --- LOGGING: Bulk Add Failure ---
+      await logActivity("BULK_ADD_FAILED", `Error during bulk upload: ${e.message}`);
       alert('Failed to add employees in bulk.');
   }
 }
 
 
 async function editEmployee(id){
-  const emp=await getEmployeeById(id);
+  const emp = await getEmployeeById(id);
   if (!emp) return;
   
-  // We use the ID to store the current employee for update, index is irrelevant now.
-  empIndex.value=id; 
-  empId.value=emp.id; 
-  empId.readOnly=true; 
-  empName.value=emp.name; 
-  empDept.value=emp.department;
-  empJoinDate.value=emp.joinDate || ''; 
-  empShift.value=emp.shift; 
-  empStatus.value=emp.status;
+  // Set values to the modal fields
+  empIndex.value = id; 
+  empId.value = emp.id; 
+  empId.readOnly = true; 
+  empName.value = emp.name; 
+  empDept.value = emp.department;
+  empJoinDate.value = emp.joinDate || ''; 
+  empShift.value = emp.shift; 
+  empStatus.value = emp.status;
+
+  // Visual Cue for the Modal
+  document.querySelector('#employeeModalLabel').innerText = `Editing: ${emp.name}`;
+  
   new bootstrap.Modal(employeeModal).show();
 }
 
+/** * NOTE: Ensure your saveEmployee function (the one triggered by the modal "Save" button) 
+ * includes this line:
+ * * await logActivity("UPDATE_EMPLOYEE", `Modified details for ${empName.value} (ID: ${empId.value})`, empId.value);
+ */
 async function deleteEmployee(id) {
     if(!confirm(`PERMANENT ACTION: Delete Employee ${id} and all history?`)) return;
     
@@ -3601,6 +4061,44 @@ async function markShiftOverride() {
     } catch(e) {
         console.error("Shift override failed:", e);
         alert('Failed to apply shift override.');
+    }
+}
+
+
+// 4. Function to populate your <select id="logUserFilter"> dynamically
+async function populateManagerFilter() {
+    const filterDropdown = document.getElementById('logUserFilter');
+    if (!filterDropdown) return;
+
+    try {
+        // Fetch logs to find unique managers who have performed actions
+        const snapshot = await db.collection("Activity_Logs").get();
+        const activeUsers = new Set();
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            // This captures the dynamic email addresses you just set up
+            if (data.performedBy) {
+                activeUsers.add(data.performedBy);
+            }
+        });
+
+        // Clear and rebuild the dropdown starting with the default option
+        filterDropdown.innerHTML = '<option value="">All Managers</option>';
+        
+        // Convert Set to Array and sort alphabetically for a better UI experience
+        const sortedUsers = Array.from(activeUsers).sort();
+
+        sortedUsers.forEach(userEmail => {
+            const option = document.createElement('option');
+            option.value = userEmail;
+            option.innerText = userEmail; // Shows the actual email (e.g., sbsanket87@gmail.com)
+            filterDropdown.appendChild(option);
+        });
+        
+        console.log("✅ Manager filter populated with:", sortedUsers);
+    } catch (error) {
+        console.error("Error populating manager filter:", error);
     }
 }
 
@@ -4880,6 +5378,15 @@ async function handleExcelUpload(event) {
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+// This registers the sw.js file you just created
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('✅ PWA ready: Service Worker Registered'))
+            .catch(err => console.error('❌ PWA failed:', err));
+    });
 }
 
 </script>
