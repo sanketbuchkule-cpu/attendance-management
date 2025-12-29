@@ -1604,13 +1604,18 @@ let currentLoggedInUser = "Unknown User";
 
 // Firebase Auth Observer
 firebase.auth().onAuthStateChanged((user) => {
+    const loginOverlay = document.getElementById('loginOverlay');
+    
     if (user) {
-        // Use the email as the unique identifier (e.g., mahesh.kadam@dealeron.com)
+        // Hide the login screen and show the dashboard
         currentLoggedInUser = user.email; 
+        if (loginOverlay) loginOverlay.style.display = 'none';
         console.log("Logged in as:", currentLoggedInUser);
     } else {
-        // Redirect to login if no user is found
-        window.location.href = "login.html"; 
+        // Show the login screen overlay
+        if (loginOverlay) {
+            loginOverlay.style.display = 'flex'; // Uses flex to center the box
+        }
     }
 });
 
@@ -1766,8 +1771,11 @@ function handleLogin() {
  */
 function logout() {
     if(confirm("Are you sure you want to logout?")) {
-        bulkEmployeeCache = []; // Clear data on logout
-        firebase.auth().signOut();
+        bulkEmployeeCache = []; 
+        firebase.auth().signOut().then(() => {
+            console.log("Signed out successfully");
+            // No need for window.location.href here!
+        });
     }
 }
 /*********************
