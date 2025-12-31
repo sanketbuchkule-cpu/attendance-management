@@ -732,13 +732,52 @@ tbody tr:hover {
 </head>
 <body>
 
-<div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:none; align-items:center; justify-content:center;">
-    <div style="width:300px; padding:20px; border:1px solid #ddd; border-radius:8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h4 class="text-center mb-3">Attendance Login</h4>
-        <input type="email" id="loginEmail" class="form-control mb-2" placeholder="Email">
-        <input type="password" id="loginPassword" class="form-control mb-3" placeholder="Password">
-        <button class="btn btn-primary w-100" onclick="handleLogin()">Login</button>
-        <p id="loginError" class="text-danger small mt-2" style="display:none;"></p>
+<div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #002147 0%, #003366 100%); z-index:9999; display:none; align-items:center; justify-content:center; padding: 20px;">
+    <div class="card border-0 shadow-lg" style="width:100%; max-width:400px; border-radius:15px; overflow:hidden;">
+        <div style="height: 5px; background: #FF8C00;"></div>
+        
+        <div class="card-body p-4 p-md-5 bg-white">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 70px; height: 70px; background: rgba(0, 33, 71, 0.05);">
+                    <i class="bi bi-shield-lock-fill" style="font-size: 2rem; color: #002147;"></i>
+                </div>
+                <h3 class="fw-bold" style="color: #002147;">Login Portal</h3>
+                <p class="text-muted small">Please enter your credentials</p>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-uppercase text-muted">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                    <input type="email" id="loginEmail" class="form-control border-start-0 bg-light" placeholder="name@company.com">
+                </div>
+            </div>
+
+            <div class="mb-4">
+    <label class="form-label small fw-bold text-uppercase text-muted">Password</label>
+    <div class="input-group">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-key text-muted"></i></span>
+        <input type="password" id="loginPassword" class="form-control border-start-0 border-end-0 bg-light" placeholder="••••••••">
+        <button class="btn btn-light border border-start-0 text-muted" type="button" onclick="toggleLoginPassword()" id="togglePasswordBtn">
+            <i class="bi bi-eye"></i>
+        </button>
+    </div>
+</div>
+
+            <button class="btn btn-lg w-100 fw-bold text-white shadow-sm mb-3" 
+                    style="background-color: #002147; border-radius: 8px; transition: all 0.3s;"
+                    onmouseover="this.style.backgroundColor='#003366'" 
+                    onmouseout="this.style.backgroundColor='#002147'"
+                    onclick="handleLogin()">
+                Sign In
+            </button>
+            
+            <p id="loginError" class="text-danger small text-center fw-bold animate__animated animate__headShake" style="display:none;"></p>
+            
+            <div class="text-center mt-4">
+                <small class="text-muted">Authorized Personnel Only</small>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -2222,6 +2261,19 @@ function renderSelectedBadges() {
     }).join('');
 }
 
+function toggleLoginPassword() {
+    const passwordInput = document.getElementById('loginPassword');
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    const icon = toggleBtn.querySelector('i');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+}
 /**
  * 3. Removes a specific employee (syncs with checkboxes)
  */
