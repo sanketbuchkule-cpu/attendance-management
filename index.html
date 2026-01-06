@@ -34,6 +34,17 @@
         --dealeron-text: #1e293b;
     }
 
+    /* Global Attendance Status Styles */
+.lwp-status {
+    background-color: #6c757d !important; /* Bootstrap Secondary Grey */
+    color: white !important;
+}
+
+.resigned-status {
+    background-color: #8B0000 !important; /* Custom Dark Red */
+    color: white !important;
+}
+
     /* Global Background & Base Typography */
     body { 
         background: var(--dealeron-bg); 
@@ -836,7 +847,7 @@ tbody tr:hover {
     <div class="modal-dialog modal-xl">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title px-2">Individual Yearly Performance Audit</h5>
+                <h5 class="modal-title px-2">Individual Yearly Audit</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -889,19 +900,19 @@ tbody tr:hover {
 
                     <div class="table-responsive rounded-3 border shadow-sm">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th class="ps-3">Month</th>
-                                    <th class="text-center">Present</th>
-                                    <th class="text-center">PL</th>
-                                    <th class="text-center">CL</th>
-                                    <th class="text-center">SL</th>
-                                    <th class="text-center">FL</th>
-                                    <th class="text-center">COFF</th>
-                                    <th class="text-center">Holidays</th>
-                                    <th class="text-end pe-3">NSA Total (₹)</th>
-                                </tr>
-                            </thead>
+                         <thead>
+    <tr>
+        <th>Month</th>
+        <th class="text-center">P</th>
+        <th class="text-center">PL</th>
+        <th class="text-center">CL</th>
+        <th class="text-center">SL</th>
+        <th class="text-center">FL</th>
+        <th class="text-center">COFF</th>
+        <th class="text-center">LWP</th> <th class="text-center">R</th>   <th class="text-center">FH</th>
+        <th class="text-end">NSA Amount</th>
+    </tr>
+</thead>
                             <tbody id="individualYearlyBody"></tbody>
                             <tfoot class="table-dark border-top-0" id="individualYearlyFooter"></tfoot>
                         </table>
@@ -917,7 +928,7 @@ tbody tr:hover {
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-navy text-white py-3" style="background-color: #002147;">
                 <h5 class="modal-title fw-bold">
-                    <i class="bi bi-layers-half me-2" style="color: #FF8C00;"></i>Advanced Bulk Attendance Tool
+                    <i class="bi bi-layers-half me-2" style="color: #FF8C00;"></i>Update Bulk Attendance
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -973,13 +984,13 @@ tbody tr:hover {
                                 <h6 class="fw-bold mb-3 text-navy">Select Dates</h6>
                                 
                                 <ul class="nav nav-pills nav-fill mb-3 bg-light p-1 rounded" id="dateTab" role="tablist">
-    <li class="nav-item">
-        <button class="nav-link active py-1 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabRange">Date Range</button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link py-1 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabSpecific">Specific Dates</button>
-    </li>
-</ul>
+                                    <li class="nav-item">
+                                        <button class="nav-link active py-1 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabRange">Date Range</button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link py-1 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabSpecific">Specific Dates</button>
+                                    </li>
+                                </ul>
 
                                 <div class="tab-content">
                                     <div class="tab-pane fade show active" id="tabRange">
@@ -1035,7 +1046,7 @@ tbody tr:hover {
                                         <option value="SL">Mark SL</option>
                                         <option value="FL">Mark FL</option>
                                         <option value="COFF">Mark COFF</option> 
-                                        <optgroup label="Shift Override" id="bulkShiftGroup"></optgroup>
+                                        <option value="LWP">Mark LWP</option> <option value="R">Mark R</option>       <optgroup label="Shift Override" id="bulkShiftGroup"></optgroup>
                                     </select>
                                     
                                     <div class="d-flex gap-2 p-2 bg-light rounded border-start border-4 border-warning">
@@ -1202,11 +1213,51 @@ tbody tr:hover {
   </div>
 </div>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<div class="modal fade" id="resignationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white py-2">
+                <h6 class="modal-title fw-bold small"><i class="bi bi-person-x me-2"></i>Set Resignation Date</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <input type="hidden" id="resignationEmpId">
+                <div class="mb-3">
+                    <label class="small text-muted mb-1">Associate Name</label>
+                    <div id="resignationEmpName" class="fw-bold text-navy"></div>
+                </div>
+                <div class="mb-2">
+                    <label class="small fw-bold mb-1">Resignation Effective Date</label>
+                    <input type="date" id="resignationDateInput" class="form-control form-control-sm">
+                </div>
+                <div class="alert alert-info py-2 px-2 mb-0 mt-3" style="font-size: 0.65rem;">
+                    <i class="bi bi-info-circle me-1"></i> "R" status will apply from this date onwards.
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-sm btn-outline-secondary border-0 text-decoration-underline" onclick="clearResignationDate()" style="font-size: 0.75rem;">Clear Date</button>
+                <div>
+                    <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-sm btn-danger px-3" onclick="saveResignationDate()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
   <div class="container-fluid">
-    <span class="navbar-brand">Leave & NSA Tracker</span>
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="dealerOnlogo.png" 
+           alt="DealerOn Logo" 
+           height="32" 
+           class="me-2"> 
+      
+      <span class="fw-bold">Leave & NSA Tracker</span>
+    </a>
+    
     <div class="ms-auto">
-        <button class="btn btn-outline-danger btn-sm" onclick="logout()">Logout</button>
+        <button class="btn btn-outline-danger btn-sm px-3" onclick="logout()">Logout</button>
     </div>
   </div>
 </nav>
@@ -1367,7 +1418,7 @@ tbody tr:hover {
         </button>
         
         <button class="btn fw-bold text-white shadow-sm" style="background-color: #FF8C00;" onclick="openAdvancedBulkTool()">
-            <i class="bi bi-layers-fill me-1"></i> Advanced Bulk Attendance Tool
+            <i class="bi bi-layers-fill me-1"></i> Update Bulk Attendance
         </button>
 
         <div class="dropdown">
@@ -1496,6 +1547,9 @@ tbody tr:hover {
                                 <li><a class="dropdown-item py-2 fw-bold text-primary" onclick="markSelected('LEAVE','FL')">Festival Leave (FL)</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item py-2 fw-bold text-navy" onclick="markSelected('LEAVE','COFF')">Comp. Off (COFF)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-secondary" onclick="markSelected('LEAVE','LWP')"><i class="bi bi-currency-minus me-2"></i>Leave Without Pay (LWP)</a></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-danger" onclick="markSelected('LEAVE','R')"><i class="bi bi-person-x-fill me-2"></i>Resignation (R)</a></li>
                             </ul>
                         </div>
                     </div>
@@ -1517,6 +1571,11 @@ tbody tr:hover {
             </div>
 
             <div class="calendar-wrapper p-2 rounded border bg-white shadow-inner">
+                <div class="d-flex gap-3 mb-3 px-2">
+                   <div class="small"><span class="badge bg-secondary p-1 me-1">&nbsp;</span> LWP (Unpaid)</div>
+                   <div class="small"><span class="badge bg-dark p-1 me-1">&nbsp;</span> Resigned (R)</div>
+                </div>
+
                 <div id="calendarHeaders" class="row g-1 text-center mb-2">
                     <div class="col py-2 fw-bold text-muted small text-uppercase">Sun</div>
                     <div class="col py-2 fw-bold text-muted small text-uppercase">Mon</div>
@@ -1671,21 +1730,24 @@ tbody tr:hover {
         <div class="table-responsive border rounded">
             <table class="table table-hover align-middle mb-0" id="deptMonthlySummary">
                 <thead style="background-color: #002147; color: white;">
-                    <tr>
-                        <th class="ps-3">Employee</th>
-                        <th class="text-center">P</th>
-                        <th class="text-center">M-Shift</th>
-                        <th class="text-center">N1-Shift</th>
-                        <th class="text-center">N2-Shift</th>
-                        <th class="text-center">PL</th>
-                        <th class="text-center">CL</th>
-                        <th class="text-center">SL</th>
-                        <th class="text-center">FL</th>
-                        <th class="text-center" style="background-color: rgba(255,255,255,0.1);">COFF</th>
-                        <th class="text-center" style="background-color: rgba(255,255,255,0.1);">FH</th>
-                        <th class="text-end pe-3">Total NSA (₹)</th>
-                    </tr>
-                </thead>
+    <tr>
+        <th class="ps-3">Employee</th>
+        <th class="text-center">P</th>
+        <th class="text-center">M-Shift</th>
+        <th class="text-center">N1-Shift</th>
+        <th class="text-center">N2-Shift</th>
+        <th class="text-center">PL</th>
+        <th class="text-center">CL</th>
+        <th class="text-center">SL</th>
+        <th class="text-center">FL</th>
+        <th class="text-center" style="background-color: rgba(255,255,255,0.1);">COFF</th>
+        <th class="text-center" style="background-color: rgba(255,255,255,0.1);">FH</th>
+        
+        <th class="text-center" style="background-color: #6c757d;">LWP</th>
+        <th class="text-center" style="background-color: #212529;">R</th>
+        <th class="text-end pe-3">Total NSA (₹)</th>
+    </tr>
+</thead>
                 <tbody class="border-top-0">
                     <tr>
                         <td colspan="12" class="text-center py-5 text-muted">
@@ -1757,21 +1819,25 @@ tbody tr:hover {
 
         <div class="table-responsive border rounded" id="yearlySummaryResults">
             <table class="table table-hover align-middle mb-0">
-                <thead style="background-color: #002147; color: white;">
-                    <tr>
-                        <th class="ps-3">Employee</th>
-                        <th>Department</th>
-                        <th class="text-center">P</th>
-                        <th class="text-center">M-Shift</th>
-                        <th class="text-center">N1-Shift</th>
-                        <th class="text-center">N2-Shift</th>
-                        <th class="text-center">PL</th>
-                        <th class="text-center">CL</th>
-                        <th class="text-center">SL</th>
-                        <th class="text-center">FL</th>
-                        <th class="text-end pe-3">Total NSA (₹)</th>
-                    </tr>
-                </thead>
+               <thead style="background-color: #002147; color: white;">
+    <tr>
+        <th class="ps-3">Employee</th>
+        <th>Dept</th>
+        <th class="text-center">P</th>
+        <th class="text-center">M-SC</th>
+        <th class="text-center">N1-SC</th>
+        <th class="text-center">N2-SC</th>
+        <th class="text-center">PL</th>
+        <th class="text-center">CL</th>
+        <th class="text-center">SL</th>
+        <th class="text-center">FL</th>
+        
+        <th class="text-center">LWP</th>
+        <th class="text-center">R</th>
+        
+        <th class="text-end pe-3">Yearly NSA (₹)</th>
+    </tr>
+</thead>
                 <tbody>
                     <tr><td colspan="11" class="text-center py-5 text-muted">Select filters and click Generate.</td></tr>
                 </tbody>
@@ -2382,6 +2448,13 @@ function selectVisibleBulk(check) {
 }
 
 // The Final Firebase Batch Processing
+/**
+ * Processes Bulk Attendance Updates with Chunker and Progress Feedback
+ */
+/**
+ * PROCESS BULK ATTENDANCE
+ * Handles both Date Range and Specific Date lists.
+ */
 async function processBulkAttendance() {
     if (bulkSelectedEmpIds.size === 0) return alert('Select at least one employee');
     
@@ -2427,12 +2500,12 @@ async function processBulkAttendance() {
                 record.status = 'PRESENT';
                 record.customShift = action.replace('SHIFT_', '');
             } 
-            // Handle Leaves (Added COFF here)
-            else if (['PL','CL','SL','FL','COFF'].includes(action)) {
+            // Handle Leaves (Added LWP and R here)
+            else if (['PL','CL','SL','FL','COFF','LWP','R'].includes(action)) {
                 record.status = 'LEAVE';
                 record.leaveType = action;
             } 
-            // Handle Regular Presence (Works for weekends too)
+            // Handle Regular Presence
             else {
                 record.status = 'PRESENT';
                 record.leaveType = null;
@@ -2456,7 +2529,7 @@ async function processBulkAttendance() {
         
         bootstrap.Modal.getInstance(document.getElementById('advancedBulkModal')).hide();
         
-        // Refresh the calendar and summary views
+        // Refresh views
         if (typeof renderCalendar === "function") renderCalendar();
         
     } catch(e) {
@@ -2464,7 +2537,13 @@ async function processBulkAttendance() {
         alert('Bulk update failed. Please check console for details.');
     }
 }
-
+// Attach reset to modal close event
+document.addEventListener('DOMContentLoaded', () => {
+    const modalEl = document.getElementById('advancedBulkModal');
+    if (modalEl) {
+        modalEl.addEventListener('hidden.bs.modal', resetBulkUI);
+    }
+});
 
 async function logActivity(actionType, details, targetId = null) {
     try {
@@ -2640,6 +2719,102 @@ function renderLoadMoreLogs(hasMore) {
             </td>
         `;
         tbody.appendChild(tr);
+    }
+}
+
+// Add this helper function to your existing code
+async function openResignationModal(empId, empName) {
+    document.getElementById('resignationEmpId').value = empId;
+    document.getElementById('resignationEmpName').innerText = empName;
+    
+    // Set the input to empty by default
+    document.getElementById('resignationDateInput').value = '';
+
+    try {
+        // Fetch current employee data to see if a date already exists
+        const doc = await db.collection('employees').doc(empId).get();
+        if (doc.exists && doc.data().resignationDate) {
+            document.getElementById('resignationDateInput').value = doc.data().resignationDate;
+        }
+    } catch (e) {
+        console.log("No existing resignation date found.");
+    }
+    
+    const myModal = new bootstrap.Modal(document.getElementById('resignationModal'));
+    myModal.show();
+}
+
+async function saveResignationDate() {
+    const empId = document.getElementById('resignationEmpId').value;
+    const resDate = document.getElementById('resignationDateInput').value;
+    const empName = document.getElementById('resignationEmpName').innerText;
+
+    if (!resDate) return alert("Please select an effective resignation date.");
+
+    // SAFETY CHECK
+    if (!confirm(`Are you sure you want to set the resignation date for ${empName} to ${resDate}?`)) {
+        return; 
+    }
+
+    try {
+        await db.collection(EMPLOYEES_COLLECTION).doc(empId).update({
+            resignationDate: resDate,
+            lastModified: new Date().toISOString()
+        });
+
+        // 1. Clear cache to force fresh fetch
+        bulkEmployeeCache = []; 
+
+        // 2. Hide Modal
+        const modalInstance = bootstrap.Modal.getInstance(document.getElementById('resignationModal'));
+        if (modalInstance) modalInstance.hide();
+
+        // 3. Refresh UI instantly
+        await renderEmployees(); 
+        if (document.getElementById('attendanceEmployee')?.value === empId) {
+            await renderCalendar();
+        }
+
+        alert("Resignation date saved successfully.");
+
+    } catch (e) {
+        console.error("Save Error:", e);
+        alert("Error saving data.");
+    }
+}
+async function clearResignationDate() {
+    const empId = document.getElementById('resignationEmpId').value;
+    const empName = document.getElementById('resignationEmpName').innerText;
+
+    // SAFETY CHECK
+    if (!confirm(`Are you sure you want to CANCEL the resignation for ${empName}? This will restore their normal attendance status.`)) {
+        return;
+    }
+
+    try {
+        await db.collection(EMPLOYEES_COLLECTION).doc(empId).update({
+            resignationDate: firebase.firestore.FieldValue.delete(),
+            lastModified: new Date().toISOString()
+        });
+
+        // 1. Clear cache
+        bulkEmployeeCache = []; 
+
+        // 2. Hide Modal
+        const modalInstance = bootstrap.Modal.getInstance(document.getElementById('resignationModal'));
+        if (modalInstance) modalInstance.hide();
+
+        // 3. Refresh UI instantly
+        await renderEmployees(); 
+        if (document.getElementById('attendanceEmployee')?.value === empId) {
+            await renderCalendar();
+        }
+
+        alert("Resignation cancelled successfully.");
+
+    } catch (e) {
+        console.error("Clear Error:", e);
+        alert("Error clearing data.");
     }
 }
 /*********************
@@ -3334,7 +3509,8 @@ async function renderEmployees(page = currentPage, filter = '') {
         const statusValue = emp.status || 'Active';
         const isChecked = selectedEmployeeIds.has(emp.id) ? 'checked' : '';
 
-        // ADDED data-label to each <td> for mobile responsiveness
+        // Added data-label to each <td> for mobile responsiveness
+        // Added the Resignation Button (bi-person-x) inside the btn-group
         tr.innerHTML = `
             <td class="ps-3">
                 <input type="checkbox" class="form-check-input emp-checkbox border-2" 
@@ -3344,14 +3520,16 @@ async function renderEmployees(page = currentPage, filter = '') {
             <td data-label="NAME">
                 <div class="fw-bold mb-0">${emp.name}</div>
                 <small class="text-muted">DealerOn Associate</small>
+                ${emp.resignationDate ? `<div class="text-danger" style="font-size:0.7rem;"><i class="bi bi-calendar-x"></i> Resigned: ${emp.resignationDate}</div>` : ''}
             </td>
             <td data-label="DEPARTMENT"><span class="badge border bg-light text-dark fw-normal px-3 py-2">${deptValue}</span></td>
             <td data-label="SHIFT"><span class="badge px-3 py-2 fw-bold" style="${shiftStyle}"><i class="bi bi-clock me-1"></i>${rawShift}</span></td>
             <td data-label="STATUS"><span class="badge rounded-pill fw-bold ${statusValue === 'Active' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}" style="padding: 0.5em 1em;">● ${statusValue}</span></td>
             <td class="text-end pe-3" data-label="ACTIONS">
                 <div class="btn-group shadow-sm bg-white rounded">
-                    <button class="btn btn-sm btn-outline-navy border-0 py-2 px-2" style="margin: 2px;" onclick="viewEmployeeHistory('${emp.id}')"><i class="bi bi-clock-history"></i></button>
-                    <button class="btn btn-sm btn-outline-navy border-0 py-2 px-2" style="margin: 2px;" onclick="editEmployee('${emp.id}')"><i class="bi bi-pencil-square"></i></button>
+                    <button class="btn btn-sm btn-outline-navy border-0 py-2 px-2" style="margin: 2px;" onclick="viewEmployeeHistory('${emp.id}')" title="History"><i class="bi bi-clock-history"></i></button>
+                    <button class="btn btn-sm btn-outline-navy border-0 py-2 px-2" style="margin: 2px;" onclick="editEmployee('${emp.id}')" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                    <button class="btn btn-sm btn-outline-danger border-0 py-2 px-2" style="margin: 2px;" onclick="openResignationModal('${emp.id}', '${emp.name.replace(/'/g, "\\'")}')" title="Resignation Date"><i class="bi bi-person-x"></i></button>
                 </div>
             </td>`;
         fragment.appendChild(tr);
@@ -3955,41 +4133,55 @@ async function generateIndividualYearlyData() {
     document.getElementById('displayEmpDept').textContent = emp.department;
     document.getElementById('displayYearLabel').textContent = `Year: ${year}`;
 
-    body.innerHTML = '<tr><td colspan="9" class="text-center">Calculating yearly data...</td></tr>';
+    // Update colspan to 11 to accommodate LWP and R
+    body.innerHTML = '<tr><td colspan="11" class="text-center py-4">Calculating yearly data...</td></tr>';
 
-    let yearlyTotals = { p: 0, pl: 0, cl: 0, sl: 0, fl: 0, coff: 0, fh: 0, nsa: 0 };
+    // 1. SPEED FIX: Fire all 12 month requests simultaneously
+    const monthPromises = Array.from({ length: 12 }, (_, i) => {
+        const monthStr = `${year}-${String(i + 1).padStart(2, '0')}`;
+        return getMonthlyReportData(emp, monthStr);
+    });
 
-    body.innerHTML = '';
-    for (let m = 1; m <= 12; m++) {
-        const monthStr = `${year}-${String(m).padStart(2, '0')}`;
-        const data = await getMonthlyReportData(emp, monthStr);
+    const monthlyResults = await Promise.all(monthPromises);
 
-        yearlyTotals.p += data.finalPresentDays;
-        yearlyTotals.pl += data.leaves.PL;
-        yearlyTotals.cl += data.leaves.CL;
-        yearlyTotals.sl += data.leaves.SL;
-        yearlyTotals.fl += data.leaves.FL;
-        yearlyTotals.coff += data.leaves.COFF;
-        yearlyTotals.fh += data.fixedHolidaysCount;
-        yearlyTotals.nsa += data.totalNsaAmount;
+    let yearlyTotals = { p: 0, pl: 0, cl: 0, sl: 0, fl: 0, coff: 0, fh: 0, lwp: 0, r: 0, nsa: 0 };
+    let rowsHtml = '';
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="fw-bold">${MONTH_NAMES[m-1]}</td>
-            <td class="text-center">${data.finalPresentDays}</td>
-            <td class="text-center">${data.leaves.PL}</td>
-            <td class="text-center">${data.leaves.CL}</td>
-            <td class="text-center">${data.leaves.SL}</td>
-            <td class="text-center">${data.leaves.FL}</td>
-            <td class="text-center">${data.leaves.COFF}</td>
-            <td class="text-center text-muted">${data.fixedHolidaysCount}</td>
-            <td class="text-end fw-bold">₹${data.totalNsaAmount.toLocaleString()}</td>
+    // 2. Process results and build rows
+    monthlyResults.forEach((data, index) => {
+        yearlyTotals.p += data.finalPresentDays || 0;
+        yearlyTotals.pl += data.leaves.PL || 0;
+        yearlyTotals.cl += data.leaves.CL || 0;
+        yearlyTotals.sl += data.leaves.SL || 0;
+        yearlyTotals.fl += data.leaves.FL || 0;
+        yearlyTotals.coff += data.leaves.COFF || 0;
+        yearlyTotals.lwp += data.leaves.LWP || 0; // New
+        yearlyTotals.r += data.leaves.R || 0;     // New
+        yearlyTotals.fh += data.fixedHolidaysCount || 0;
+        yearlyTotals.nsa += data.totalNsaAmount || 0;
+
+        rowsHtml += `
+            <tr>
+                <td class="fw-bold">${MONTH_NAMES[index]}</td>
+                <td class="text-center">${data.finalPresentDays}</td>
+                <td class="text-center">${data.leaves.PL}</td>
+                <td class="text-center">${data.leaves.CL}</td>
+                <td class="text-center">${data.leaves.SL}</td>
+                <td class="text-center">${data.leaves.FL}</td>
+                <td class="text-center">${data.leaves.COFF}</td>
+                <td class="text-center">${data.leaves.LWP || 0}</td>
+                <td class="text-center">${data.leaves.R || 0}</td>
+                <td class="text-center text-muted">${data.fixedHolidaysCount}</td>
+                <td class="text-end fw-bold">₹${data.totalNsaAmount.toLocaleString()}</td>
+            </tr>
         `;
-        body.appendChild(tr);
-    }
+    });
+
+    // 3. SPEED FIX: Update DOM in bulk
+    body.innerHTML = rowsHtml;
 
     footer.innerHTML = `
-        <tr>
+        <tr class="table-dark fw-bold">
             <td>YEARLY TOTAL</td>
             <td class="text-center">${yearlyTotals.p}</td>
             <td class="text-center">${yearlyTotals.pl}</td>
@@ -3997,6 +4189,8 @@ async function generateIndividualYearlyData() {
             <td class="text-center">${yearlyTotals.sl}</td>
             <td class="text-center">${yearlyTotals.fl}</td>
             <td class="text-center">${yearlyTotals.coff}</td>
+            <td class="text-center">${yearlyTotals.lwp}</td>
+            <td class="text-center">${yearlyTotals.r}</td>
             <td class="text-center">${yearlyTotals.fh}</td>
             <td class="text-end text-warning">₹${yearlyTotals.nsa.toLocaleString()}</td>
         </tr>
@@ -4131,8 +4325,9 @@ async function renderCalendar() {
   const emp = await getEmployeeById(empId);
   if (!emp) return;
   const joinDate = emp.joinDate;
+  // Get Resignation Date from employee object
+  const resignationDate = emp.resignationDate || null; 
 
-  // Fetch all attendance records for this employee for this month in one go
   const allRecords = await getAttendanceFromDB(empId, month);
   const getAttendanceRecord = (date) => {
     const recordKey = `${empId}_${date}`;
@@ -4142,13 +4337,12 @@ async function renderCalendar() {
   const [year, m] = month.split('-').map(Number);
   const daysInMonth = new Date(year, m, 0).getDate();
   calendar.innerHTML = '';
-  const holidays = (await getHolidaysFromDB()).map(h => h.date);
+  const holidaysData = await getHolidaysFromDB();
+  const holidays = holidaysData.map(h => h.date);
   const nsaRules = await getNsaRulesFromDB();
 
-  // 1. Calculate offset for the first day of the month
-  const firstDayOfMonth = new Date(year, m - 1, 1).getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const firstDayOfMonth = new Date(year, m - 1, 1).getDay();
 
-  // 2. Add blank cells for padding
   for (let i = 0; i < firstDayOfMonth; i++) {
     const blankCell = document.createElement('div');
     blankCell.className = 'date-cell-container';
@@ -4156,7 +4350,6 @@ async function renderCalendar() {
     calendar.appendChild(blankCell);
   }
 
-  // 3. Render days
   for (let d = 1; d <= daysInMonth; d++) {
     const dateObj = new Date(year, m - 1, d);
     const dayIndex = dateObj.getDay();
@@ -4174,31 +4367,48 @@ async function renderCalendar() {
     const isWeekend = (dayIndex === 0 || dayIndex === 6);
     const isHoliday = holidays.includes(date);
     const isBeforeJoinDate = date < joinDate;
-    const record = getAttendanceRecord(date); // Use the pre-fetched record
+    
+    // NEW: Check if this date is on or after resignation
+    const isResigned = resignationDate && date >= resignationDate;
+    
+    const record = getAttendanceRecord(date);
 
-    // --- START OF EDITED LOGIC ---
     if (isBeforeJoinDate) {
       cell.classList.add('tbh');
       badge = `<small>TBH</small>`;
       statusText = 'TBH';
-    } else if (record) {
+    } 
+    // --- START AUTO-RESIGNATION OVERRIDE ---
+    else if (isResigned) {
+      cell.classList.add('resigned-status'); // Uses your Global Dark Red Class
+      badge = `<span class="fw-bold">R</span>`;
+      statusText = 'R';
+    } 
+    // --- END AUTO-RESIGNATION OVERRIDE ---
+    else if (record) {
       if (record.status === 'LEAVE') {
-        cell.classList.add('bg-danger', 'text-white'); // Full block red
+        if (record.leaveType === 'R') {
+            cell.classList.add('resigned-status'); 
+        } else if (record.leaveType === 'LWP') {
+            cell.classList.add('lwp-status'); 
+        } else {
+            cell.classList.add('bg-danger', 'text-white'); 
+        }
         badge = `<span class="fw-bold">${record.leaveType}</span>`;
         statusText = record.leaveType;
       } else if (record.customShift) {
-        cell.classList.add('bg-info', 'text-dark'); // Full block blue
+        cell.classList.add('bg-info', 'text-dark');
         const shiftName = nsaRules[record.customShift]?.name || record.customShift;
         badge = `<small class="fw-bold d-block" style="font-size: 0.7rem;">${shiftName}</small>`;
         statusText = `SC (${record.customShift})`;
       } else if (record.status === 'PRESENT') {
-        cell.classList.add('bg-success', 'text-white'); // Full block green
+        cell.classList.add('bg-success', 'text-white');
         badge = `<span class="fw-bold">PRESENT</span>`;
         statusText = 'P';
       }
     } else if (isHoliday) {
       cell.classList.add('holiday');
-      const holidayName = (await getHolidaysFromDB()).find(h => h.date === date)?.name || 'Holiday';
+      const holidayName = holidaysData.find(h => h.date === date)?.name || 'Holiday';
       badge = `<small class="fw-bold text-dark">${holidayName}</small>`;
       statusText = 'H';
     } else if (isWeekend) {
@@ -4206,28 +4416,28 @@ async function renderCalendar() {
       badge = `<small class="text-muted">WEEKEND</small>`;
       statusText = 'W';
     } else {
-      // Default Present if no record and not weekend/holiday/before join
       cell.classList.add('bg-success', 'text-white');
       badge = `<span class="fw-bold">PRESENT</span>`;
       statusText = 'P';
     }
-    // --- END OF EDITED LOGIC ---
 
     cell.setAttribute('data-date', date);
     cell.setAttribute('data-status', statusText);
-
     cell.innerHTML = `<div class="fw-bold">${d}</div>${badge}`;
 
-    // Only allow selection if not before join date (TBH)
-    if (!isBeforeJoinDate) {
+    // Prevent clicking on dates if the person has resigned or is TBH
+    if (!isBeforeJoinDate && !isResigned) {
       cell.onclick = () => toggleDate(cell, date);
+    } else if (isResigned) {
+        // Optional: show a message that they are resigned if they try to click
+        cell.style.cursor = 'not-allowed';
+        cell.title = "Employee Resigned";
     }
 
     container.appendChild(cell);
     calendar.appendChild(container);
   }
 }
-
 function toggleDate(cell,date){
   const idx=selectedDates.indexOf(date);
   if(idx>-1){ selectedDates.splice(idx,1); cell.classList.remove('selected'); }
@@ -4459,15 +4669,17 @@ async function getMonthlyReportData(emp, month) {
     const [year, m] = month.split('-').map(Number);
     const daysInMonth = new Date(year, m, 0).getDate();
     
-    // Optimized Data Fetching: 
-    // Only fetch Rules and Holidays if they aren't already in memory
+    // Validate Resignation Date strictly to prevent "All Resigned" bug
+    const resDate = (emp.resignationDate && emp.resignationDate.trim() !== "") ? emp.resignationDate : null;
+
+    // Optimized Data Fetching
     const [nsaRules, records, holidays] = await Promise.all([
         reportRefCache.nsaRules || getNsaRulesFromDB(),
-        getAttendanceFromDB(emp.id, month), // Attendance is unique to emp, must fetch
+        getAttendanceFromDB(emp.id, month),
         reportRefCache.holidays || getHolidaysFromDB()
     ]);
 
-    // Update Cache for subsequent calls
+    // Cache update
     if (!reportRefCache.nsaRules) reportRefCache.nsaRules = nsaRules;
     if (!reportRefCache.holidays) {
         reportRefCache.holidays = holidays;
@@ -4475,28 +4687,34 @@ async function getMonthlyReportData(emp, month) {
     }
 
     const holidayDates = reportRefCache.holidayDates;
-    let leaves = { PL: 0, CL: 0, SL: 0, FL: 0, COFF: 0 }; 
+    let leaves = { PL: 0, CL: 0, SL: 0, FL: 0, COFF: 0, LWP: 0, R: 0 };
     let fixedHolidaysCount = 0; 
     let finalPresentDays = 0;
     let totalNsaAmount = 0;
     let shiftBreakdown = { MORNING_8_5: 0, NIGHT_6_3: 0, NIGHT_9_30_6_30: 0 }; 
 
-    // Create a local map for O(1) lookup speed inside the loop
     const recordMap = {};
     records.forEach(r => { recordMap[r.date] = r; });
 
     for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         
-        // Skip dates before join date
+        // 1. Skip dates before join date
         if (dateStr < emp.joinDate) continue;
+
+        // 2. PRIORITY: Check for Resignation
+        // If employee has resigned, mark as 'R' and skip all other logic (No NSA, No Present)
+        if (resDate && dateStr >= resDate) {
+            leaves.R++;
+            continue; 
+        }
 
         const dateObj = new Date(year, m - 1, d);
         const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
         const isHoliday = holidayDates.includes(dateStr);
         const record = recordMap[dateStr];
 
-        // LOGIC: Manual Attendance or Shift Overrides
+        // 3. LOGIC: Manual Attendance or Shift Overrides
         if (record && record.status === 'PRESENT') {
             finalPresentDays++;
             const effectiveShiftKey = record.customShift || emp.shift;
@@ -4507,7 +4725,7 @@ async function getMonthlyReportData(emp, month) {
                 shiftBreakdown[effectiveShiftKey]++;
             }
         } 
-        // LOGIC: Automatic Presence for Weekdays
+        // 4. LOGIC: Automatic Presence for Weekdays (if no DB record exists)
         else if (!isWeekend && !isHoliday && !record) {
             finalPresentDays++;
             const effectiveShiftKey = emp.shift; 
@@ -4518,13 +4736,16 @@ async function getMonthlyReportData(emp, month) {
                 shiftBreakdown[effectiveShiftKey]++;
             }
         }
-        // LOGIC: Recorded Leaves
+        // 5. LOGIC: Recorded Leaves
         else if (record && record.status === 'LEAVE') {
-            if (leaves.hasOwnProperty(record.leaveType)) {
-                leaves[record.leaveType]++;
+            const lType = record.leaveType;
+            if (leaves.hasOwnProperty(lType)) {
+                leaves[lType]++;
+            } else {
+                leaves.LWP++; // Fallback if type is missing
             }
         }
-        // LOGIC: Fixed Holidays
+        // 6. LOGIC: Fixed Holidays
         else if (isHoliday) {
             fixedHolidaysCount++;
         }
@@ -4537,18 +4758,6 @@ async function getMonthlyReportData(emp, month) {
         totalNsaAmount, 
         shiftBreakdown, 
         validWorkingDaysCount: daysInMonth 
-    };
-}
-
-// Helper to calculate NSA without hitting the database inside a loop
-function calculateDailyNsaLocally(emp, date, record, nsaRules) {
-    // Priority: 1. Specific record shift, 2. Employee default shift
-    const effectiveShiftKey = (record && record.shift) ? record.shift : emp.shift;
-    const rule = nsaRules[effectiveShiftKey] || { amount: 0 };
-    
-    return {
-        shift: effectiveShiftKey,
-        amount: rule.amount || 0
     };
 }
 
@@ -4585,7 +4794,6 @@ async function renderEmployeeSummary() {
   let breakdownHtml = '<p class="fw-bold">Present Days Breakdown by Shift:</p><ul class="list-unstyled">';
   let breakdownCount = 0;
 
-  // We iterate through all keys present in the breakdown
   Object.keys(shiftBreakdown).forEach(key => {
     const days = shiftBreakdown[key] || 0;
     if (days > 0) {
@@ -4607,6 +4815,10 @@ async function renderEmployeeSummary() {
     breakdownHtml += `<li><span class="text-muted">No specific shift data recorded.</span></li>`;
   }
   breakdownHtml += '</ul>';
+
+  // Calculations
+  const totalActualLeaves = (leaves.PL || 0) + (leaves.CL || 0) + (leaves.SL || 0) + (leaves.FL || 0) + (leaves.COFF || 0) + (leaves.LWP || 0);
+  const resignedDays = leaves.R || 0;
 
   // 2. Render UI Cards
   document.getElementById('employeeSummary').innerHTML = `
@@ -4633,53 +4845,67 @@ async function renderEmployeeSummary() {
         <div class="card h-100 border-start border-4 border-primary shadow-sm">
             <div class="card-body py-3">
                 <div class="text-muted small fw-bold text-uppercase mb-1">Total Leaves</div>
-                <div class="h3 mb-0 fw-bold text-primary">
-                    ${leaves.PL + leaves.CL + leaves.SL + leaves.FL + leaves.COFF}
-                </div>
+                <div class="h3 mb-0 fw-bold text-primary">${totalActualLeaves}</div>
             </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card h-100 border-start border-4 border-warning shadow-sm">
+        <div class="card h-100 border-start border-4 border-danger shadow-sm">
             <div class="card-body py-3">
-                <div class="text-muted small fw-bold text-uppercase mb-1">Fixed Holidays</div>
-                <div class="h3 mb-0 fw-bold text-warning">${fixedHolidaysCount}</div>
+                <div class="text-muted small fw-bold text-uppercase mb-1">Resigned (R)</div>
+                <div class="h3 mb-0 fw-bold text-danger">${resignedDays}</div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-7">
         <div class="card h-100 border-0 shadow-sm bg-light">
             <div class="card-body">
-                <div class="text-muted small fw-bold text-uppercase mb-3">Leave Breakdown</div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="text-center">
-                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.PL}</div>
+                <div class="text-muted small fw-bold text-uppercase mb-3">Attendance & Holiday Breakdown</div>
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="text-center mx-1">
+                        <div class="badge bg-white text-dark border px-2 py-2 mb-1">${leaves.PL || 0}</div>
                         <div class="small text-muted">PL</div>
                     </div>
-                    <div class="text-center">
-                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.CL}</div>
+                    <div class="text-center mx-1">
+                        <div class="badge bg-white text-dark border px-2 py-2 mb-1">${leaves.CL || 0}</div>
                         <div class="small text-muted">CL</div>
                     </div>
-                    <div class="text-center">
-                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.SL}</div>
+                    <div class="text-center mx-1">
+                        <div class="badge bg-white text-dark border px-2 py-2 mb-1">${leaves.SL || 0}</div>
                         <div class="small text-muted">SL</div>
                     </div>
-                    <div class="text-center">
-                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.FL}</div>
+                    <div class="text-center mx-1">
+                        <div class="badge bg-white text-dark border px-2 py-2 mb-1">${leaves.FL || 0}</div>
                         <div class="small text-muted">FL</div>
                     </div>
-                    <div class="text-center">
-                        <div class="badge bg-white text-dark border px-3 py-2 mb-1">${leaves.COFF}</div>
+                    <div class="text-center mx-1">
+                        <div class="badge bg-white text-dark border px-2 py-2 mb-1">${leaves.COFF || 0}</div>
                         <div class="small text-muted">CO</div>
+                    </div>
+                    <div class="text-center mx-1">
+                        <div class="badge bg-secondary text-white border px-2 py-2 mb-1">${leaves.LWP || 0}</div>
+                        <div class="small text-muted">LWP</div>
+                    </div>
+                    
+                    <div class="vr mx-2 opacity-25" style="height: 30px;"></div>
+
+                    <div class="text-center mx-1">
+                        <div class="badge bg-warning text-dark border px-2 py-2 mb-1">${fixedHolidaysCount}</div>
+                        <div class="small text-muted fw-bold">HOLIDAY</div>
+                    </div>
+
+                    <div class="text-center mx-1">
+                        <div class="badge bg-dark text-white border px-2 py-2 mb-1">${resignedDays}</div>
+                        <div class="small text-danger fw-bold">R</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-5">
         <div class="card h-100 nsa-total-card shadow">
             <div class="card-body d-flex justify-content-between align-items-center px-4">
                 <div>
@@ -4713,22 +4939,28 @@ async function renderEmployeeSummary() {
 function renderSummaryChart(presentDays, leaves) {
     const ctx = document.getElementById('summaryChart');
     
-    const totalDays = presentDays + leaves.PL + leaves.CL + leaves.SL + leaves.FL;
+    // Updated calculation to include LWP and R
+    const totalDays = presentDays + leaves.PL + leaves.CL + leaves.SL + leaves.FL + leaves.COFF + (leaves.LWP || 0) + (leaves.R || 0);
+    
     if (totalDays === 0) {
         if (summaryChartInstance) summaryChartInstance.destroy();
         return;
     }
     
     const data = {
-        labels: ['Present', 'PL', 'CL', 'SL', 'FL'],
+        labels: ['Present', 'Paid Leaves', 'LWP', 'Resigned (R)'],
         datasets: [{
-            data: [presentDays, leaves.PL, leaves.CL, leaves.SL, leaves.FL],
+            data: [
+                presentDays, 
+                (leaves.PL + leaves.CL + leaves.SL + leaves.FL + leaves.COFF), 
+                (leaves.LWP || 0), 
+                (leaves.R || 0)
+            ],
             backgroundColor: [
-                'rgb(40, 167, 69)',   
-                'rgb(255, 193, 7)',   
-                'rgb(0, 123, 255)',   
-                'rgb(220, 53, 69)',   
-                'rgb(108, 117, 125)' 
+                'rgb(40, 167, 69)',   // Green: Present
+                'rgb(0, 123, 255)',   // Blue: Combined Paid Leaves
+                'rgb(108, 117, 125)',  // Grey: LWP
+                'rgb(33, 37, 41)'     // Dark: Resigned
             ],
             hoverOffset: 4
         }]
@@ -4743,9 +4975,6 @@ function renderSummaryChart(presentDays, leaves) {
             plugins: {
                 legend: {
                     position: 'bottom',
-                },
-                title: {
-                    display: false,
                 }
             }
         }
@@ -4763,61 +4992,62 @@ async function renderDepartmentSummary(month) {
   const tbody = document.querySelector('#deptSummaryTable tbody');
   const paginationContainer = document.getElementById('deptSummaryPagination');
   
-  // Set initial loading state
   tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Calculating reports...</td></tr>';
   
   try {
-    // 1. Get employees (Uses fast cache)
     const allEmployees = await getEmployeesFromDB();
-    const activeEmployees = allEmployees.filter(emp => emp.status === 'Active');
     
-    // 2. Parallel Processing
-    // Uses the optimized getMonthlyReportData which reuses cached NSA rules and holidays
-    const allReports = await Promise.all(activeEmployees.map(emp => getMonthlyReportData(emp, month))); 
+    // FIX: Process ALL employees. We don't filter 'Active' here because 
+    // resigned employees still need their final month report/NSA.
+    const allReports = await Promise.all(allEmployees.map(emp => getMonthlyReportData(emp, month))); 
 
     const reportData = [];
 
-    // 3. Process results locally
     allReports.forEach((report, index) => {
-        const emp = activeEmployees[index];
+        const emp = allEmployees[index];
         const { finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount, leaves } = report;
 
         if (validWorkingDaysCount === 0) return; 
 
+        // Include if they worked, took leave, or reached resignation date
         if (finalPresentDays > 0 || Object.values(leaves).some(l => l > 0)) {
           reportData.push({ 
             emp, 
             days: finalPresentDays, 
             nsa: totalNsaAmount, 
-            breakdown: shiftBreakdown 
+            breakdown: shiftBreakdown,
+            resignedThisMonth: (leaves.R > 0) // Track if they have 'R' days
           });
         }
     });
 
-    // 4. Pagination Logic
     const totalPages = Math.ceil(reportData.length / ROWS_PER_PAGE);
     deptSummaryPage = Math.min(deptSummaryPage, totalPages) || 1;
     const start = (deptSummaryPage - 1) * ROWS_PER_PAGE;
     
-    // Clear loading state
     tbody.innerHTML = '';
     
     if (reportData.length === 0) {
-         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No attendance data or NSA recorded for this month.</td></tr>';
+         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No records for this month.</td></tr>';
          if (paginationContainer) paginationContainer.innerHTML = '';
          return;
     }
 
-    // 5. High-Speed Rendering using Document Fragment
-    // This builds the entire table page in memory before showing it to the user
     const fragment = document.createDocumentFragment();
 
     reportData.slice(start, start + ROWS_PER_PAGE).forEach(item => {
       const tr = document.createElement('tr');
+      tr.className = "align-middle";
+      
+      // Styling for Resigned Name
+      const nameHtml = item.resignedThisMonth 
+        ? `<div class="fw-bold">${item.emp.name}</div><span class="badge bg-danger-subtle text-danger" style="font-size:0.65rem;">RESIGNED</span>`
+        : `<strong>${item.emp.name}</strong>`;
+
       tr.innerHTML = `
-          <td><strong>${item.emp.name}</strong></td>
-          <td><span class="badge bg-light text-dark">${item.emp.department}</span></td>
-          <td class="text-center">${item.days}</td>
+          <td>${nameHtml}</td>
+          <td><span class="badge bg-light text-dark fw-normal">${item.emp.department || 'N/A'}</span></td>
+          <td class="text-center fw-bold">${item.days}</td>
           <td class="text-center">${item.breakdown.MORNING_8_5 || 0}</td>
           <td class="text-center">${item.breakdown.NIGHT_6_3 || 0}</td>
           <td class="text-center">${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
@@ -4825,10 +5055,8 @@ async function renderDepartmentSummary(month) {
       fragment.appendChild(tr);
     });
 
-    // Single DOM update for the whole page
     tbody.appendChild(fragment);
 
-    // 6. Update Pagination UI
     renderSummaryPagination(
       'deptSummaryPagination', 
       totalPages, 
@@ -4840,7 +5068,7 @@ async function renderDepartmentSummary(month) {
 
   } catch (error) {
     console.error("Summary Generation Error:", error);
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error generating summary. Please try again.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error generating summary.</td></tr>';
   }
 }
 
@@ -4861,102 +5089,84 @@ async function renderDeptMonthlySummaryPage(dept, month) {
     const tbody = document.querySelector('#deptMonthlySummary tbody');
     const pageInfo = document.getElementById('deptPageInfo');
     
-    // 1. Show DealerOn Branded Loading State
+    // 1. Initial Loading State
     tbody.innerHTML = `
         <tr>
-            <td colspan="12" class="text-center py-5 text-muted">
+            <td colspan="14" class="text-center py-5 text-muted">
                 <div class="spinner-border spinner-border-sm me-2" style="color: #002147;"></div>
                 Generating Departmental Breakdown...
             </td>
         </tr>`;
 
+    // 2. Fetch Data
     const allEmployees = await getEmployeesFromDB();
+    const filteredEmployees = allEmployees.filter(emp => emp.department === dept && emp.status === 'Active');
+
+    // SPEED FIX: Parallel Processing
+    const reportPromises = filteredEmployees.map(async (emp) => {
+        const report = await getMonthlyReportData(emp, month);
+        return { emp, report };
+    });
+
+    const results = await Promise.all(reportPromises);
     const reportData = [];
 
-    // Filter only Active employees for the specific department
-    const filteredEmployees = allEmployees.filter(emp => emp.department === dept && emp.status === 'Active');
-    
-    for (const emp of filteredEmployees) {
-        const report = await getMonthlyReportData(emp, month);
-        const { leaves, fixedHolidaysCount, finalPresentDays, totalNsaAmount, shiftBreakdown, validWorkingDaysCount } = report;
-
-        if (validWorkingDaysCount === 0) continue; 
-
-        if(finalPresentDays > 0 || Object.values(leaves).some(l => l > 0) || fixedHolidaysCount > 0) {
-            reportData.push({ 
-                emp, 
-                finalPresentDays, 
-                leaves, 
-                fixedHolidaysCount, 
-                nsaAmount: totalNsaAmount, 
-                breakdown: shiftBreakdown 
-            });
+    results.forEach(({ emp, report }) => {
+        const { leaves, fixedHolidaysCount, finalPresentDays, totalNsaAmount, validWorkingDaysCount, shiftBreakdown } = report;
+        if (validWorkingDaysCount > 0) {
+            // Include if there is any activity (Present, Leaves, or Holidays)
+            if(finalPresentDays > 0 || Object.values(leaves).some(l => l > 0) || fixedHolidaysCount > 0) {
+                reportData.push({ emp, finalPresentDays, leaves, fixedHolidaysCount, nsaAmount: totalNsaAmount, breakdown: shiftBreakdown });
+            }
         }
-    }
+    });
 
-    // 2. Pagination Calculation
+    // 3. Pagination
     const totalPages = Math.ceil(reportData.length / ROWS_PER_PAGE) || 1;
     deptMonthlySummaryPage = Math.min(deptMonthlySummaryPage, totalPages) || 1;
     const start = (deptMonthlySummaryPage - 1) * ROWS_PER_PAGE;
     const paginatedItems = reportData.slice(start, start + ROWS_PER_PAGE);
 
-    // Update Footer Info Label
     if (pageInfo) {
         pageInfo.innerText = reportData.length > 0 
             ? `Showing ${start + 1}-${Math.min(start + ROWS_PER_PAGE, reportData.length)} of ${reportData.length} records`
             : "No records found";
     }
 
-    tbody.innerHTML = '';
-
     if (reportData.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="12" class="text-center py-5">
-                    <h5 class="text-muted fw-bold">No Data Available</h5>
-                    <p class="small">No attendance or NSA recorded for ${dept} in ${month}.</p>
-                </td>
-            </tr>`;
-        document.getElementById('deptMonthlySummaryPagination').innerHTML = '';
-        document.getElementById('backDeptSummaryBtn').classList.remove('d-none');
+        tbody.innerHTML = `<tr><td colspan="14" class="text-center py-5"><h5>No Data Available</h5></td></tr>`;
         return;
     }
 
-    // 3. Rendering Table Rows
+    // 4. SPEED FIX: Batch DOM Update
+    let rowsHtml = '';
     paginatedItems.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.className = "align-middle"; // Perfect vertical alignment
-        
-        tr.innerHTML = `
-            <td class="ps-3">
-                <div class="fw-bold" style="color: #002147;">${item.emp.name}</div>
-                <small class="text-muted" style="font-size: 0.7rem;">ID: ${item.emp.id}</small>
-            </td>
-            <td class="text-center fw-bold">${item.finalPresentDays}</td>
-            <td class="text-center">${item.breakdown.MORNING_8_5 || 0}</td>
-            <td class="text-center">${item.breakdown.NIGHT_6_3 || 0}</td>
-            <td class="text-center">${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
-            <td class="text-center text-primary fw-bold">${item.leaves.PL || 0}</td>
-            <td class="text-center text-primary fw-bold">${item.leaves.CL || 0}</td>
-            <td class="text-center text-primary fw-bold">${item.leaves.SL || 0}</td>
-            <td class="text-center text-primary fw-bold">${item.leaves.FL || 0}</td>
-            <td class="text-center" style="background-color: #f0f7ff; color: #002147; font-weight: 600;">${item.leaves.COFF || 0}</td> 
-            <td class="text-center" style="background-color: #fff9e6; color: #856404; font-weight: 600;">${item.fixedHolidaysCount || 0}</td> 
-            <td class="text-end pe-3 fw-bold text-success">₹${item.nsaAmount.toLocaleString()}</td>
-        `;
-        tbody.appendChild(tr);
+        rowsHtml += `
+            <tr class="align-middle">
+                <td class="ps-3">
+                    <div class="fw-bold" style="color: #002147;">${item.emp.name}</div>
+                    <small class="text-muted" style="font-size: 0.7rem;">ID: ${item.emp.id}</small>
+                </td>
+                <td class="text-center fw-bold">${item.finalPresentDays}</td>
+                <td class="text-center">${item.breakdown.MORNING_8_5 || 0}</td>
+                <td class="text-center">${item.breakdown.NIGHT_6_3 || 0}</td>
+                <td class="text-center">${item.breakdown.NIGHT_9_30_6_30 || 0}</td>
+                <td class="text-center text-primary fw-bold">${item.leaves.PL || 0}</td>
+                <td class="text-center text-primary fw-bold">${item.leaves.CL || 0}</td>
+                <td class="text-center text-primary fw-bold">${item.leaves.SL || 0}</td>
+                <td class="text-center text-primary fw-bold">${item.leaves.FL || 0}</td>
+                <td class="text-center" style="background-color: #f0f7ff; color: #002147; font-weight: 600;">${item.leaves.COFF || 0}</td> 
+                <td class="text-center" style="background-color: #fff9e6; color: #856404; font-weight: 600;">${item.fixedHolidaysCount || 0}</td> 
+                
+                <td class="text-center lwp-status fw-bold">${item.leaves.LWP || 0}</td>
+                <td class="text-center resigned-status fw-bold">${item.leaves.R || 0}</td>
+                
+                <td class="text-end pe-3 fw-bold text-success">₹${item.nsaAmount.toLocaleString()}</td>
+            </tr>`;
     });
+    tbody.innerHTML = rowsHtml;
 
-    // 4. Update Pagination UI
-    renderSummaryPagination(
-        'deptMonthlySummaryPagination', 
-        totalPages, 
-        deptMonthlySummaryPage, 
-        'renderDeptMonthlySummaryPage', 
-        'deptMonthlySummaryPage',
-        `'${dept}', '${month}'`
-    );
-
+    renderSummaryPagination('deptMonthlySummaryPagination', totalPages, deptMonthlySummaryPage, 'renderDeptMonthlySummaryPage', 'deptMonthlySummaryPage', `'${dept}', '${month}'`);
     document.getElementById('backDeptSummaryBtn').classList.remove('d-none');
 }
 /*********************
@@ -5000,7 +5210,7 @@ async function getYearlyReportData(year, deptFilter) {
         };
         
         let yearlyPresentDays = 0;
-        let yearlyLeaves = { PL: 0, CL: 0, SL: 0, FL: 0, COFF: 0 }; // Added COFF
+        let yearlyLeaves = { PL:0, CL:0, SL:0, FL:0, COFF:0, LWP:0, R:0 }; // Added COFF
         let yearlyFH = 0; // Added FH counter
         let yearlyNSA = 0;
         let yearlyShiftBreakdown = { MORNING_8_5: 0, NIGHT_6_3: 0, NIGHT_9_30_6_30: 0 }; 
@@ -5010,7 +5220,7 @@ async function getYearlyReportData(year, deptFilter) {
             const monthKey = `${year}-${String(m).padStart(2, '0')}`;
             const daysInMonth = new Date(year, m, 0).getDate();
             
-            let leaves = { PL: 0, CL: 0, SL: 0, FL: 0, COFF: 0 }; // Added COFF
+            let leaves = { PL: 0, CL: 0, SL: 0, FL: 0, COFF: 0, LWP: 0, R: 0 }; // Added COFF
             let presentDays = 0;
             let nsa = 0;
             let fhCount = 0; // Fixed Holiday counter for the month
@@ -5091,10 +5301,10 @@ async function renderYearlySummary(page = 1) {
     const pageInfo = document.getElementById('yearlyPageInfo');
     const backBtn = document.getElementById('backYearlyBtn');
     
-    // 1. DealerOn Loading State
+    // 1. Loading State (Corrected colspan to 13)
     tbody.innerHTML = `
         <tr>
-            <td colspan="11" class="text-center py-5 text-muted">
+            <td colspan="13" class="text-center py-5 text-muted">
                 <div class="spinner-border spinner-border-sm me-2" style="color: #002147;"></div>
                 Compiling Annual Records for ${year}...
             </td>
@@ -5102,16 +5312,16 @@ async function renderYearlySummary(page = 1) {
 
     // Validation
     if (!year || year.length !== 4) {
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-danger py-4 fw-bold">Please enter a valid 4-digit year.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="text-center text-danger py-4 fw-bold">Please enter a valid 4-digit year.</td></tr>';
         return;
     }
     
     yearlySummaryPage = page;
     
-    // Fetch Data from your existing engine
+    // 2. Fetch Data from Engine
     const reportData = await getYearlyReportData(year, deptFilter);
     
-    // 2. Pagination Logic
+    // Pagination Logic
     const totalItems = reportData.length;
     const totalPages = Math.ceil(totalItems / YEARLY_ROWS_PER_PAGE) || 1;
     const start = (yearlySummaryPage - 1) * YEARLY_ROWS_PER_PAGE;
@@ -5124,37 +5334,48 @@ async function renderYearlySummary(page = 1) {
             : "No records found";
     }
 
-    tbody.innerHTML = '';
-    
     // Handle Empty Results
     if (reportData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center py-5 text-muted">No attendance data or NSA recorded for this group.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="text-center py-5 text-muted">No attendance data found for this year.</td></tr>';
         renderSummaryPagination('yearlySummaryPagination', 0, 1, 'renderYearlySummary', 'yearlySummaryPage');
-        if (backBtn) backBtn.classList.remove('d-none'); // Show reset even if empty
+        if (backBtn) backBtn.classList.remove('d-none'); 
         return;
     }
 
-    // 3. Render Rows with DealerOn High-Contrast Styling
+    // 3. SPEED FIX: Build the entire table as a string first to avoid slow DOM updates
+    let rowsHtml = '';
     paginatedItems.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.className = "align-middle";
-        tr.innerHTML = `
-            <td class="ps-3 fw-bold" style="color: #002147;">${item.name}</td>
-            <td><span class="badge border bg-light text-dark fw-normal px-2 py-1">${item.department}</span></td>
-            <td class="text-center fw-bold">${item.presentDays}</td>
-            <td class="text-center">${item.yearlyBreakdown.MORNING_8_5 || 0}</td>
-            <td class="text-center">${item.yearlyBreakdown.NIGHT_6_3 || 0}</td>
-            <td class="text-center">${item.yearlyBreakdown.NIGHT_9_30_6_30 || 0}</td>
-            <td class="text-center text-primary fw-bold">${item.leaves.PL || 0}</td>
-            <td class="text-center text-primary fw-bold">${item.leaves.CL || 0}</td>
-            <td class="text-center text-primary fw-bold">${item.leaves.SL || 0}</td>
-            <td class="text-center text-primary fw-bold">${item.leaves.FL || 0}</td>
-            <td class="text-end pe-3 fw-bold text-success">₹${item.nsa.toLocaleString()}</td>
-        `;
-        tbody.appendChild(tr);
+        // Ensure values exist even if engine returned null/undefined
+        const pl = item.leaves.PL || 0;
+        const cl = item.leaves.CL || 0;
+        const sl = item.leaves.SL || 0;
+        const fl = item.leaves.FL || 0;
+        const lwp = item.leaves.LWP || 0;
+        const r = item.leaves.R || 0;
+
+        rowsHtml += `
+            <tr class="align-middle">
+                <td class="ps-3 fw-bold" style="color: #002147;">${item.name}</td>
+                <td><span class="badge border bg-light text-dark fw-normal px-2 py-1">${item.department}</span></td>
+                <td class="text-center fw-bold">${item.presentDays}</td>
+                <td class="text-center">${item.yearlyBreakdown.MORNING_8_5 || 0}</td>
+                <td class="text-center">${item.yearlyBreakdown.NIGHT_6_3 || 0}</td>
+                <td class="text-center">${item.yearlyBreakdown.NIGHT_9_30_6_30 || 0}</td>
+                <td class="text-center text-primary fw-bold">${pl}</td>
+                <td class="text-center text-primary fw-bold">${cl}</td>
+                <td class="text-center text-primary fw-bold">${sl}</td>
+                <td class="text-center text-primary fw-bold">${fl}</td>
+                
+                <td class="text-center lwp-status fw-bold">${lwp}</td>
+                <td class="text-center resigned-status fw-bold">${r}</td>
+                
+                <td class="text-end pe-3 fw-bold text-success">₹${item.nsa.toLocaleString()}</td>
+            </tr>`;
     });
 
-    // 4. UI Polish: Show Reset Button & Update Pagination
+    // Bulk inject rows into the table
+    tbody.innerHTML = rowsHtml;
+
     if (backBtn) backBtn.classList.remove('d-none');
 
     renderSummaryPagination(
@@ -5217,7 +5438,6 @@ async function renderMonthlyBreakdown(reportData, year, deptFilter) {
 
     const allMonths = Object.keys(reportData[0].monthly).sort(); 
 
-    // --- SPEED FIX 1: Fetch all working days for the year upfront ---
     const workingDaysCache = {};
     await Promise.all(allMonths.map(async (monthKey) => {
         const m = parseInt(monthKey.split('-')[1]);
@@ -5237,27 +5457,28 @@ async function renderMonthlyBreakdown(reportData, year, deptFilter) {
 
     for (const monthKey of allMonths) {
         const monthName = MONTH_NAMES[parseInt(monthKey.split('-')[1]) - 1];
-        headerRow1.innerHTML += `<th colspan="12" class="text-center bg-dark text-white">${monthName}</th>`;
+        // Colspan increased to 14 to accommodate LWP and R
+        headerRow1.innerHTML += `<th colspan="14" class="text-center bg-dark text-white">${monthName}</th>`;
         headerRow2.innerHTML += `
             <th>P(T)</th><th>${shiftCodes.MORNING_8_5}</th><th>${shiftCodes.NIGHT_6_3}</th><th>${shiftCodes.NIGHT_9_30_6_30}</th>
             <th>PL</th><th>CL</th><th>SL</th><th>FL</th>
             <th class="table-info">COFF</th> 
             <th class="table-warning">FH</th>
-            <th>NSA(₹)</th><th>W Days</th>`;
+            <th class="table-secondary">LWP</th> <th class="table-dark">R</th>       <th>NSA(₹)</th><th>W Days</th>`;
     }
 
     headerRow1.innerHTML += `<th rowspan="2">Yearly P</th><th rowspan="2">Yearly L</th><th rowspan="2">Yearly NSA (₹)</th>`;
     header.appendChild(headerRow1);
     header.appendChild(headerRow2);
 
-    // --- 2. Construct Body (Using Fragment for speed) ---
+    // --- 2. Construct Body ---
     const bodyFragment = document.createDocumentFragment();
 
     for (const item of reportData) {
-        const totalLeaves = item.leaves.PL + item.leaves.CL + item.leaves.SL + item.leaves.FL + item.leaves.COFF;
+        // Calculation updated to include LWP and R in total leaves
+        const totalLeaves = item.leaves.PL + item.leaves.CL + item.leaves.SL + item.leaves.FL + item.leaves.COFF + (item.leaves.LWP || 0) + (item.leaves.R || 0);
         const tr = document.createElement('tr');
         
-        // Build row HTML as a string first (faster than multiple appends)
         let rowHtml = `<td><strong>${item.name}</strong></td><td><small>${item.department}</small></td>`;
 
         for (const monthKey of allMonths) {
@@ -5273,7 +5494,7 @@ async function renderMonthlyBreakdown(reportData, year, deptFilter) {
                 <td>${data.leaves.PL}</td><td>${data.leaves.CL}</td><td>${data.leaves.SL}</td><td>${data.leaves.FL}</td>
                 <td class="table-info">${data.leaves.COFF}</td>
                 <td class="table-warning">${data.fh}</td>
-                <td class="fw-bold">₹${data.nsa}</td>
+                <td class="table-secondary">${data.leaves.LWP || 0}</td> <td class="resigned-status">${data.leaves.R || 0}</td>         <td class="fw-bold">₹${data.nsa}</td>
                 <td class="text-muted small">${empWorkingDaysCount}</td>`;
         }
 
@@ -5287,7 +5508,7 @@ async function renderMonthlyBreakdown(reportData, year, deptFilter) {
     }
     body.appendChild(bodyFragment);
 
-    // --- 3. Construct Footer (Grand Totals) ---
+    // --- 3. Construct Footer ---
     const totalRow = document.createElement('tr');
     totalRow.className = 'table-dark fw-bold';
     totalRow.innerHTML += `<td colspan="2">GRAND TOTAL</td>`;
@@ -5297,7 +5518,8 @@ async function renderMonthlyBreakdown(reportData, year, deptFilter) {
     let grandTotalNSA = 0;
 
     for (const monthKey of allMonths) {
-        let mT = { p:0, scm:0, scn1:0, scn2:0, pl:0, cl:0, sl:0, fl:0, coff:0, fh:0, nsa:0 };
+        // mT object expanded to track LWP and R
+        let mT = { p:0, scm:0, scn1:0, scn2:0, pl:0, cl:0, sl:0, fl:0, coff:0, fh:0, nsa:0, lwp: 0, r: 0 };
         const monthWorkingDaysCount = (workingDaysCache[monthKey] || []).length;
 
         reportData.forEach(item => {
@@ -5308,16 +5530,20 @@ async function renderMonthlyBreakdown(reportData, year, deptFilter) {
             mT.scn2 += data.breakdown.NIGHT_9_30_6_30 || 0;
             mT.pl += data.leaves.PL; mT.cl += data.leaves.CL; mT.sl += data.leaves.SL; mT.fl += data.leaves.FL;
             mT.coff += data.leaves.COFF; mT.fh += data.fh; mT.nsa += data.nsa;
+            mT.lwp += (data.leaves.LWP || 0);
+            mT.r += (data.leaves.R || 0);
         });
         
         grandTotalP += mT.p;
-        grandTotalL += (mT.pl + mT.cl + mT.sl + mT.fl + mT.coff);
+        // Total leaves for grand total now includes lwp and r
+        grandTotalL += (mT.pl + mT.cl + mT.sl + mT.fl + mT.coff + mT.lwp + mT.r);
         grandTotalNSA += mT.nsa;
 
         totalRow.innerHTML += `
             <td>${mT.p}</td><td>${mT.scm}</td><td>${mT.scn1}</td><td>${mT.scn2}</td>
             <td>${mT.pl}</td><td>${mT.cl}</td><td>${mT.sl}</td><td>${mT.fl}</td>
-            <td>${mT.coff}</td><td>${mT.fh}</td><td>₹${mT.nsa}</td>
+            <td>${mT.coff}</td><td>${mT.fh}</td>
+            <td>${mT.lwp}</td><td>${mT.r}</td> <td>₹${mT.nsa}</td>
             <td>${monthWorkingDaysCount}</td>`;
     }
 
