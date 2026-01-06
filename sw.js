@@ -1,5 +1,5 @@
 // Changing the version number to v3 forces the browser to see this as a NEW app
-const CACHE_NAME = 'attendance-v19'; 
+const CACHE_NAME = 'attendance-v20'; 
 
 self.addEventListener('install', (event) => {
     // This line forces the new, fixed code to take over immediately
