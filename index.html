@@ -13,7 +13,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -43,6 +43,22 @@
 .resigned-status {
     background-color: #8B0000 !important; /* Custom Dark Red */
     color: white !important;
+}
+
+/* Update your existing .date-cell style */
+/* This forces the hand icon on anything that has a tooltip */
+[data-bs-toggle="tooltip"] {
+    cursor: pointer !important;
+}
+
+/* This ensures that even the text inside the cell doesn't trigger a text-selector cursor */
+.date-cell, .date-cell * {
+    cursor: pointer !important;
+}
+
+/* This prevents the tooltip box itself from catching mouse events */
+.tooltip {
+    pointer-events: none !important;
 }
 
     /* Global Background & Base Typography */
@@ -98,6 +114,8 @@
         background: white;
         border-radius: 12px;
     }
+
+    
     
     .date-cell {
         min-height: 100px;
@@ -438,6 +456,21 @@ tbody tr:hover {
     transition: all 0.2s ease;
 }
 
+/* Add this to your style block */
+.navbar-brand img {
+    border-right: 1px solid rgb(255 255 255 / 100%);
+    padding-right: 15px;
+    margin-right: 15px;
+}
+
+/* Optional: Customize tooltip color to match your dark theme */
+.tooltip-inner {
+    background-color: #212529;
+    border: 1px solid #495057;
+    font-size: 0.8rem;
+    padding: 8px 12px;
+}
+
 .btn-outline-navy:hover {
     background-color: #002147;
     color: #ffffff;
@@ -743,6 +776,7 @@ tbody tr:hover {
 </head>
 <body>
 
+
 <div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #002147 0%, #003366 100%); z-index:9999; display:none; align-items:center; justify-content:center; padding: 20px;">
     <div class="card border-0 shadow-lg" style="width:100%; max-width:400px; border-radius:15px; overflow:hidden;">
         <div style="height: 5px; background: #FF8C00;"></div>
@@ -790,6 +824,16 @@ tbody tr:hover {
             </div>
         </div>
     </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+  <div id="liveToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMessage">
+        </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
 </div>
 
 <div class="modal fade" id="employeeModal" tabindex="-1" aria-labelledby="employeeModalLabel" aria-hidden="true">
@@ -1541,10 +1585,10 @@ tbody tr:hover {
                                 <i class="bi bi-sun me-1"></i> Mark Leave
                             </button>
                             <ul class="dropdown-menu shadow border-0">
-                                <li><a class="dropdown-item py-2 fw-bold text-primary" onclick="markSelected('LEAVE','PL')">Paid Leave (PL)</a></li>
-                                <li><a class="dropdown-item py-2 fw-bold text-primary" onclick="markSelected('LEAVE','CL')">Casual Leave (CL)</a></li>
-                                <li><a class="dropdown-item py-2 fw-bold text-primary" onclick="markSelected('LEAVE','SL')">Sick Leave (SL)</a></li>
-                                <li><a class="dropdown-item py-2 fw-bold text-primary" onclick="markSelected('LEAVE','FL')">Festival Leave (FL)</a></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-navy" onclick="markSelected('LEAVE','PL')">Paid Leave (PL)</a></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-navy" onclick="markSelected('LEAVE','CL')">Casual Leave (CL)</a></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-navy" onclick="markSelected('LEAVE','SL')">Sick Leave (SL)</a></li>
+                                <li><a class="dropdown-item py-2 fw-bold text-navy" onclick="markSelected('LEAVE','FL')">Festival Leave (FL)</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item py-2 fw-bold text-navy" onclick="markSelected('LEAVE','COFF')">Comp. Off (COFF)</a></li>
                                 <li><hr class="dropdown-divider"></li>
@@ -2076,6 +2120,22 @@ async function startSecureSession() {
         // If an error still happens here, it's likely a rule issue, not a timing issue
         console.error("Session start error:", error);
     }
+}
+
+function showToast(message, type = 'success') {
+    const toastEl = document.getElementById('liveToast');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    // Set color based on type (success, danger, warning, info)
+    toastEl.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-info');
+    toastEl.classList.add(`bg-${type}`);
+    
+    // Set text
+    toastMessage.textContent = message;
+    
+    // Initialize and show Bootstrap toast
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
 }
 
 function resetYearlySummary() {
@@ -2775,11 +2835,11 @@ async function saveResignationDate() {
             await renderCalendar();
         }
 
-        alert("Resignation date saved successfully.");
+        showToast("Resignation date saved successfully!", "success");
 
     } catch (e) {
         console.error("Save Error:", e);
-        alert("Error saving data.");
+        showToast("Failed to update record.", "danger");
     }
 }
 async function clearResignationDate() {
@@ -2810,11 +2870,11 @@ async function clearResignationDate() {
             await renderCalendar();
         }
 
-        alert("Resignation cancelled successfully.");
+        showToast("Resignation cancelled successfully!", "success");
 
     } catch (e) {
         console.error("Clear Error:", e);
-        alert("Error clearing data.");
+        showToast("Error clearing data.", "danger");
     }
 }
 /*********************
@@ -4325,7 +4385,6 @@ async function renderCalendar() {
   const emp = await getEmployeeById(empId);
   if (!emp) return;
   const joinDate = emp.joinDate;
-  // Get Resignation Date from employee object
   const resignationDate = emp.resignationDate || null; 
 
   const allRecords = await getAttendanceFromDB(empId, month);
@@ -4363,80 +4422,93 @@ async function renderCalendar() {
 
     let badge = '';
     let statusText = '';
+    let tooltipText = ''; // To store our info
 
     const isWeekend = (dayIndex === 0 || dayIndex === 6);
     const isHoliday = holidays.includes(date);
     const isBeforeJoinDate = date < joinDate;
-    
-    // NEW: Check if this date is on or after resignation
     const isResigned = resignationDate && date >= resignationDate;
     
     const record = getAttendanceRecord(date);
 
+    // --- LOGIC FOR BADGES AND TOOLTIP CONTENT ---
     if (isBeforeJoinDate) {
       cell.classList.add('tbh');
       badge = `<small>TBH</small>`;
       statusText = 'TBH';
+      tooltipText = "To Be Hired: Date is before join date.";
     } 
-    // --- START AUTO-RESIGNATION OVERRIDE ---
     else if (isResigned) {
-      cell.classList.add('resigned-status'); // Uses your Global Dark Red Class
+      cell.classList.add('resigned-status'); 
       badge = `<span class="fw-bold">R</span>`;
       statusText = 'R';
+      tooltipText = `Resigned: Effective ${resignationDate}`;
     } 
-    // --- END AUTO-RESIGNATION OVERRIDE ---
     else if (record) {
       if (record.status === 'LEAVE') {
-        if (record.leaveType === 'R') {
-            cell.classList.add('resigned-status'); 
-        } else if (record.leaveType === 'LWP') {
-            cell.classList.add('lwp-status'); 
-        } else {
-            cell.classList.add('bg-danger', 'text-white'); 
-        }
+        if (record.leaveType === 'R') cell.classList.add('resigned-status'); 
+        else if (record.leaveType === 'LWP') cell.classList.add('lwp-status'); 
+        else cell.classList.add('bg-danger', 'text-white'); 
+        
         badge = `<span class="fw-bold">${record.leaveType}</span>`;
         statusText = record.leaveType;
+        tooltipText = `Leave Type: ${record.leaveType} ${record.reason ? ' | ' + record.reason : ''}`;
       } else if (record.customShift) {
         cell.classList.add('bg-info', 'text-dark');
         const shiftName = nsaRules[record.customShift]?.name || record.customShift;
         badge = `<small class="fw-bold d-block" style="font-size: 0.7rem;">${shiftName}</small>`;
         statusText = `SC (${record.customShift})`;
+        tooltipText = `Custom Shift: ${shiftName}`;
       } else if (record.status === 'PRESENT') {
         cell.classList.add('bg-success', 'text-white');
         badge = `<span class="fw-bold">PRESENT</span>`;
         statusText = 'P';
+        const shiftName = nsaRules[emp.shift]?.name || "Standard";
+        tooltipText = `Status: Present | Shift: ${shiftName}`;
       }
     } else if (isHoliday) {
       cell.classList.add('holiday');
       const holidayName = holidaysData.find(h => h.date === date)?.name || 'Holiday';
       badge = `<small class="fw-bold text-dark">${holidayName}</small>`;
       statusText = 'H';
+      tooltipText = `Public Holiday: ${holidayName}`;
     } else if (isWeekend) {
       cell.classList.add('weekend');
       badge = `<small class="text-muted">WEEKEND</small>`;
       statusText = 'W';
+      tooltipText = "Weekend (Non-working day)";
     } else {
       cell.classList.add('bg-success', 'text-white');
       badge = `<span class="fw-bold">PRESENT</span>`;
       statusText = 'P';
+      const shiftName = nsaRules[emp.shift]?.name || "Standard";
+      tooltipText = `Auto-Present | Shift: ${shiftName}`;
     }
 
+    // --- APPLY BOOTSTRAP TOOLTIP ATTRIBUTES ---
+    cell.setAttribute('data-bs-toggle', 'tooltip');
+    cell.setAttribute('data-bs-placement', 'top');
+    cell.setAttribute('title', tooltipText);
+    
     cell.setAttribute('data-date', date);
     cell.setAttribute('data-status', statusText);
     cell.innerHTML = `<div class="fw-bold">${d}</div>${badge}`;
 
-    // Prevent clicking on dates if the person has resigned or is TBH
     if (!isBeforeJoinDate && !isResigned) {
       cell.onclick = () => toggleDate(cell, date);
     } else if (isResigned) {
-        // Optional: show a message that they are resigned if they try to click
         cell.style.cursor = 'not-allowed';
-        cell.title = "Employee Resigned";
     }
 
     container.appendChild(cell);
     calendar.appendChild(container);
   }
+
+  // --- INITIALIZE TOOLTIPS AFTER LOOP ---
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
 }
 function toggleDate(cell,date){
   const idx=selectedDates.indexOf(date);
